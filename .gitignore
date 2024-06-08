@@ -1,0 +1,4 @@
+# OBS Studio
+.obsproject
+*.json
+*.ini
