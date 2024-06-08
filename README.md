@@ -1,7 +1,7 @@
 # Flames of War Streaming Setup
 
 ## Descripción
-Este proyecto proporciona una configuración completa para transmitir partidas de Flames of War utilizando OBS Studio, cámaras de video y Mist Server. Aquí encontrarás guías, configuraciones y scripts necesarios para comenzar a transmitir tus partidas, utilizando software libre y hardware económico. El proyecto es flexible y puede adaptarse a cualquier configuración y calidad de materiales que tengas disponibles.
+Este proyecto proporciona una configuración completa para transmitir partidas de Flames of War utilizando OBS Studio, cámaras de video y Mist Server. Aquí encontrarás guías, configuraciones y scripts necesarios para comenzar a transmitir tus partidas, utilizando software libre y hardware económico. El proyecto es flexible y puede adaptarse a cualquier configuración y calidad de materiales que tengas disponibles. En una fase futura el proyecto se completará incluyendo la metodología y componentes para poder incluir un completo oponente IA en las partidas de wargames.
 
 ## Configuración Inicial
 ### Requisitos
