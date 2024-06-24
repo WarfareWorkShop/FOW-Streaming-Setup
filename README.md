@@ -1,16 +1,20 @@
 # Flames of War Streaming Setup
 
 ## Descripción
+
 Este proyecto proporciona una configuración completa para transmitir partidas de Flames of War utilizando OBS Studio, cámaras de video y Mist Server. Además de las funcionalidades básicas de streaming, hemos añadido una emocionante nueva característica que permite a los jugadores enfrentar a una Inteligencia Artificial (IA) como oponente. Esta IA utiliza ChatGPT de OpenAI para interactuar con los jugadores, procesar imágenes y videos en tiempo real para analizar el estado del juego, y reconocer resultados de tiradas de dados.
 
 ## Funcionalidades Principales
+
 - Streaming de Video: Configuración detallada para transmitir partidas utilizando OBS Studio y Mist Server.
 - Interacción por Voz: Integración con la Web Speech API para comandos de voz y respuestas de la IA en tiempo real.
 - IA como Oponente: Uso de ChatGPT para jugar contra una IA en partidas de Flames of War.
 - Procesamiento de Imágenes y Dados: Análisis de imágenes y videos para determinar el estado del juego y los resultados de las tiradas de dados.
 
 ## Configuración Inicial
+
 ### Requisitos
+
 - OBS Studio
 - VLC Media Player o Webcamoid
 - Cámara USB
@@ -20,7 +24,9 @@ Este proyecto proporciona una configuración completa para transmitir partidas d
 - API de OpenAI para ChatGPT
 
 ### Instalación
+
 Dependiendo de tus preferencias, elige entre estos programas para stream. Serán los que recojan la imagen de las cámaras (los ojos de la IA).
+
 1. **OBS Studio:**
    - Descarga e instala OBS Studio desde [OBS Studio](https://obsproject.com/).
 2. **VLC Media Player:**
@@ -28,45 +34,41 @@ Dependiendo de tus preferencias, elige entre estos programas para stream. Serán
 3. **Webcamoid:**
    - Descarga e instala Webcamoid desde [Webcamoid](https://webcamoid.github.io/).
 4. **Mist Server:**
-   - Descarga e instala Mist Server desde [Mist Server](https://mistserver.org/). 
+   - Descarga e instala Mist Server desde [Mist Server](https://mistserver.org/).
 
-# Clonar el Repositorio
+## Clonar el Repositorio
 
-      git clone https://github.com/WarfareWorkShop/FOW-Streaming-Setup.git
-      cd FOW-Streaming-Setup
+`      git clone https://github.com/WarfareWorkShop/FOW-Streaming-Setup.git
+      cd FOW-Streaming-Setup`
 
-# Configurar el Backend
+## Configurar el Backend
 
 - Instala las dependencias:
 
-      cd backend
-      pip install -r requirements.txt
-
+  `cd backend
+  pip install -r requirements.txt`
 - Configura las variables de entorno para la API de OpenAI y la base de datos.
 
-# Configurar el Frontend
+## Configurar el Frontend
 
 - Instala las dependencias:
 
-      cd frontend
-      npm install
-  
+  `cd frontend npm install`
 - Inicia el servidor de desarrollo:
 
-      npm start
-
+  `npm start`
 - Configurar el Servidor de Streaming de Video
 
-# Iniciar la IA como Oponente
+## Iniciar la IA como Oponente
 
 En el backend, inicia el servidor Flask para manejar las solicitudes de la API:
 
-      cd backend
-      flask run
-      
+`      cd backend
+      flask run`
+
 - Configura y prueba la interacción con ChatGPT desde el frontend para recibir y enviar mensajes a la IA.
 
-# Interacción por Voz
+## Interacción por Voz
 
 Usa la interfaz de usuario para enviar comandos de voz a la IA y recibir respuestas habladas en tiempo real.
 Procesamiento de Imágenes y Dados
@@ -74,6 +76,7 @@ Procesamiento de Imágenes y Dados
 Sube imágenes o videos del tablero de juego y deja que la IA analice el estado actual y los resultados de los dados.
 
 ### Configuración de OBS
+
 1. **Importar Perfiles y Escenas:**
    - Exporta tu perfil y configuración de escena desde OBS y súbelos al repositorio.
    - En OBS, ve a "Perfil" > "Importar" y selecciona el archivo exportado.
@@ -85,6 +88,7 @@ Sube imágenes o videos del tablero de juego y deja que la IA analice el estado 
    - Agrega Mist Server como fuente en OBS y configura sus ajustes según sea necesario.
 
 ### Ejemplo de configuración
+
 - **PC 1:**
   - 2 cámaras USB 2K conectadas
   - Una cámara enfocada en el tablero completo
@@ -109,6 +113,7 @@ Sube imágenes o videos del tablero de juego y deja que la IA analice el estado 
   - Transmite hacia plataformas de internet (YouTube, Twitch, etc.) utilizando OBS Studio
 
 ### Uso
+
 1. **Iniciar Streaming:**
    - En el PC 1, inicia la transmisión en Mist Server
    - En el PC 2, configura tu clave de transmisión en OBS para la plataforma de tu elección (YouTube, Twitch)
@@ -117,9 +122,9 @@ Sube imágenes o videos del tablero de juego y deja que la IA analice el estado 
    - Usa un dispositivo secundario para verificar la calidad del video y audio en la plataforma de streaming
 
 ## Contribuir
+
 Si tienes mejoras, sugerencias o encuentras errores, por favor abre un issue o envía un pull request.
 
 ## Licencia
+
 Este proyecto está licenciado bajo la licencia BSD-3-Clause. Consulta el archivo `LICENSE` para más detalles.
-
-
