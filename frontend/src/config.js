@@ -40,6 +40,7 @@ export const AUTH_ENDPOINTS = {
   register: '/api/auth/register',
   login: '/api/auth/login',
   me: '/api/auth/me',
+  logout: '/api/auth/logout',
 };
 
 export const apiClient = axios.create({

@@ -215,7 +215,14 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await apiClient.post(AUTH_ENDPOINTS.logout);
+    } catch (error) {
+      // Non blocking: even if the server cannot be reached we still remove local tokens.
+      console.error('Logout failed', error);
+    }
+
     clearTokens();
     setAuthState({ status: 'anonymous', profile: null, error: null });
     setMatches([]);
@@ -599,7 +606,7 @@ function App() {
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
-              <option value="lm_studio">LM Studio</option>
+              <option value="lmstudio">LM Studio</option>
             </select>
 
             <label htmlFor="chat-message">Mensaje</label>
