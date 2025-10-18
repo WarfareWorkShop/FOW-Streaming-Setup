@@ -3,23 +3,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import App from './App';
-import { DEFAULT_LANGUAGE, translate } from './i18n';
+
+const mockClearTokens = jest.fn();
+const mockIsAuthenticated = jest.fn(() => true);
+const mockSetTokens = jest.fn();
 
 jest.mock('./auth', () => ({
-  clearTokens: jest.fn(),
-  isAuthenticated: jest.fn(() => true),
-  setTokens: jest.fn(),
+  clearTokens: (...args) => mockClearTokens(...args),
+  isAuthenticated: (...args) => mockIsAuthenticated(...args),
+  setTokens: (...args) => mockSetTokens(...args),
 }));
 
-jest.mock('./config', () => {
-  const post = jest.fn();
-  const get = jest.fn(() => Promise.resolve({ data: { username: 'Tester' } }));
-  const del = jest.fn(() => Promise.resolve({}));
-  return {
-    apiClient: { post, get, delete: del },
-    CHAT_ENDPOINT: '/api/chat',
-  };
-});
+const mockPost = jest.fn();
+const mockGet = jest.fn();
+const mockDelete = jest.fn();
+const mockSetAuthToken = jest.fn();
 
 jest.mock('./config', () => ({
   AUTH_ENDPOINTS: {
@@ -33,6 +31,7 @@ jest.mock('./config', () => ({
   apiClient: {
     post: (...args) => mockPost(...args),
     get: (...args) => mockGet(...args),
+    delete: (...args) => mockDelete(...args),
     defaults: { headers: { common: {} } },
   },
   setAuthToken: (...args) => mockSetAuthToken(...args),
@@ -51,6 +50,9 @@ describe('App', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockIsAuthenticated.mockReturnValue(true);
+
     mockGet.mockImplementation((url) => {
       if (url === '/api/auth/me') {
         return Promise.resolve({ data: { username: 'commander', email: 'cmd@example.com' } });
@@ -60,102 +62,91 @@ describe('App', () => {
       }
       return Promise.resolve({ data: {} });
     });
+
+    let matchId = 1;
     mockPost.mockImplementation((url, payload) => {
-      if (url === '/api/auth/login') {
-        return Promise.resolve({ data: { token: 'token-123' } });
+      if (url === '/api/chat') {
+        return Promise.resolve({ data: { response: 'Informe táctico listo.' } });
       }
       if (url === '/api/matches') {
         return Promise.resolve({
           data: {
             match: {
-              id: 1,
+              id: matchId++,
               name: payload.name,
-              scenario: payload.scenario,
+              scenario: payload.scenario ?? '',
               status: 'active',
-              state: {
-                turn: 'player',
-                player: { units: 6, morale: 10, victory_points: 0 },
-                ai: { units: 6, morale: 10, victory_points: 0 },
-                log: [],
-              },
-              participants: [],
-              invitations: [],
-              events: [],
+              mode: payload.mode,
+              player_slots: payload.player_slots,
+              opponent_type: payload.opponent_type,
             },
           },
         });
-      }
-      if (url === '/api/matches/1/actions') {
-        return Promise.resolve({
-          data: {
-            match: {
-              id: 1,
-              name: 'Escaramuza',
-              scenario: 'Campo abierto',
-              status: 'active',
-              participants: [],
-              invitations: [],
-              events: [],
-              state: {
-                turn: 'player',
-                player: { units: 6, morale: 10, victory_points: 1 },
-                ai: { units: 5, morale: 10, victory_points: 0 },
-                log: [{ actor: 'ai', text: 'Contraataque enemigo' }],
-              },
-            },
-            state: {
-              turn: 'player',
-              player: { units: 6, morale: 10, victory_points: 1 },
-              ai: { units: 5, morale: 10, victory_points: 0 },
-              log: [{ actor: 'ai', text: 'Contraataque enemigo' }],
-            },
-          },
-        });
-      }
-      if (url === '/api/chat') {
-        return Promise.resolve({ data: { response: 'Informe táctico listo.' } });
       }
       return Promise.resolve({ data: {} });
     });
   });
 
-  it('permite iniciar sesión y crear una partida contra la IA', async () => {
+  it('renderiza el perfil y permite enviar una consulta táctica', async () => {
     render(<App />);
 
     await screen.findByText(/Sesión iniciada como/i);
 
-    const input = screen.getByLabelText(/mensaje/i);
-    fireEvent.change(input, { target: { value: 'Hola' } });
+    fireEvent.click(screen.getByRole('button', { name: /Tácticas y voz/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
+    const textarea = await screen.findByLabelText(/Mensaje/i);
+    fireEvent.change(textarea, { target: { value: 'Necesito un informe' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Enviar consulta/i }));
 
     await waitFor(() =>
-      expect(apiClient.post).toHaveBeenCalledWith('/api/chat', {
-        message: 'Hola',
+      expect(mockPost).toHaveBeenCalledWith('/api/chat', {
+        message: 'Necesito un informe',
         provider: 'openai',
-      })
+      }),
     );
 
-    expect(screen.getByText(/Respuesta/i)).toBeInTheDocument();
-    expect(screen.getByText('Hola comandante')).toBeInTheDocument();
+    expect(await screen.findByText(/Informe táctico listo/i)).toBeInTheDocument();
   });
 
-  it('muestra un mensaje de error cuando la petición falla', async () => {
-    apiClient.post.mockRejectedValueOnce({ message: 'Network error' });
+  it('muestra un mensaje de error cuando la consulta falla', async () => {
+    mockPost.mockImplementationOnce(() => Promise.reject(new Error('Network error')));
 
-  it('envía mensajes al asistente táctico', async () => {
     render(<App />);
 
     await screen.findByText(/Sesión iniciada como/i);
+    fireEvent.click(screen.getByRole('button', { name: /Tácticas y voz/i }));
 
-    fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: 'Hola' } });
-    fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
+    fireEvent.change(screen.getByLabelText(/Mensaje/i), { target: { value: 'Necesito apoyo' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enviar consulta/i }));
 
-    const chatInput = screen.getByLabelText(/Mensaje/i);
-    fireEvent.change(chatInput, { target: { value: 'Necesito un informe' } });
-    fireEvent.click(screen.getByRole('button', { name: /Enviar/i }));
+    expect(await screen.findByText('Network error')).toBeInTheDocument();
+  });
 
-    await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/api/chat', { message: 'Necesito un informe' }));
-    expect(screen.getByText(/Informe táctico listo/i)).toBeInTheDocument();
+  it('crea una partida contra la IA y la muestra en el historial', async () => {
+    render(<App />);
+
+    await screen.findByText(/Sesión iniciada como/i);
+    fireEvent.click(screen.getByRole('button', { name: /Partidas/i }));
+
+    fireEvent.change(screen.getByLabelText(/Nombre de la partida/i), { target: { value: 'Escaramuza' } });
+    fireEvent.change(screen.getByLabelText(/Escenario \(opcional\)/i), { target: { value: 'Campo abierto' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Crear partida/i }));
+
+    await waitFor(() =>
+      expect(mockPost).toHaveBeenCalledWith(
+        '/api/matches',
+        expect.objectContaining({
+          name: 'Escaramuza',
+          mode: 'solo_ai',
+          opponent_type: 'ai',
+          player_slots: expect.any(Number),
+        }),
+      ),
+    );
+
+    expect(await screen.findByText('Escaramuza')).toBeInTheDocument();
+    expect(screen.getByText(/Partida creada correctamente/i)).toBeInTheDocument();
   });
 });
