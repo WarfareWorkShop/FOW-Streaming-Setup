@@ -49,6 +49,86 @@ Dependiendo de tus preferencias, elige entre estos programas para stream. Serán
   pip install -r requirements.txt`
 - Configura las variables de entorno para la API de OpenAI y la base de datos.
 
+### Endpoints de Autenticación
+
+El backend expone un conjunto de endpoints JSON para la gestión de usuarios y sesiones. Todos devuelven respuestas en formato `application/json`.
+
+#### `POST /register`
+
+- **Payload**
+
+  ```json
+  {
+    "username": "usuario",
+    "password": "contraseña"
+  }
+  ```
+
+- **Respuestas**
+  - `201 Created`: registro exitoso.
+    ```json
+    {"message": "User registered successfully!"}
+    ```
+  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
+    ```json
+    {"message": "Username and password are required."}
+    ```
+    ```json
+    {"message": "Username and password cannot be empty."}
+    ```
+  - `409 Conflict`: el nombre de usuario ya existe.
+    ```json
+    {"message": "Username is already taken."}
+    ```
+  - `500 Internal Server Error`: error al crear el usuario.
+    ```json
+    {"message": "Could not register user. Please try again later."}
+    ```
+
+#### `POST /login`
+
+- **Payload**
+
+  ```json
+  {
+    "username": "usuario",
+    "password": "contraseña"
+  }
+  ```
+
+- **Respuestas**
+  - `200 OK`: credenciales válidas, devuelve token JWT.
+    ```json
+    {"token": "<jwt>"}
+    ```
+  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
+    ```json
+    {"message": "Username and password are required."}
+    ```
+    ```json
+    {"message": "Username and password cannot be empty."}
+    ```
+  - `401 Unauthorized`: credenciales inválidas.
+    ```json
+    {"message": "Invalid credentials!"}
+    ```
+
+#### `GET /me`
+
+- **Headers**
+  - `Authorization: Bearer <jwt>`
+
+- **Respuestas**
+  - `200 OK`: devuelve la información del usuario autenticado.
+    ```json
+    {
+      "id": 1,
+      "username": "usuario"
+    }
+    ```
+  - `401 Unauthorized`: token ausente o inválido (gestionado por JWT).
+  - `404 Not Found`: el usuario referenciado por el token no existe.
+
 ## Configurar el Frontend
 
 - Instala las dependencias:
