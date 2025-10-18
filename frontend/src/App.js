@@ -59,6 +59,46 @@ function App() {
   const [chatProvider, setChatProvider] = useState('openai');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatLog, setChatLog] = useState([]);
+  const [diceResult, setDiceResult] = useState(null);
+  const [dicePreview, setDicePreview] = useState(null);
+
+  const resetFeedback = () => {
+    setStatusMessage('');
+    setError(null);
+  };
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const response = await apiClient.get(AUTH_ENDPOINTS.me);
+      setUser(response.data);
+    } catch (profileError) {
+      console.error(profileError);
+      setUser(null);
+    }
+  }, []);
+
+  const fetchMatches = useCallback(async () => {
+    if (!token) {
+      setMatches([]);
+      return;
+    }
+    try {
+      const response = await apiClient.get(MATCHES_ENDPOINT);
+      setMatches(response.data.matches || []);
+    } catch (matchError) {
+      console.error(matchError);
+      setError('No se pudieron cargar las partidas.');
+    }
+  }, [token]);
+
+  const handleAuthChange = (event) => {
+    const { name, value } = event.target;
+    setCredentials((prev) => ({ ...prev, [name]: value }));
+  };
 
   const [authState, setAuthState] = useState({
     status: isAuthenticated() ? 'pending' : 'anonymous',
@@ -127,14 +167,17 @@ function App() {
   const sendMessage = async (messageToSend = message) => {
     const trimmedMessage = messageToSend.trim();
 
-    if (!trimmedMessage) {
-      setError('Por favor ingresa un mensaje antes de enviar.');
+    if (!credentials.username || !credentials.password) {
+      setError('Debes indicar usuario y contraseña.');
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    if (authMode === 'register' && !credentials.email) {
+      setError('El correo electrónico es obligatorio para registrarse.');
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
       const res = await apiClient.post(CHAT_ENDPOINT, {
         message: trimmedMessage,
@@ -154,12 +197,49 @@ function App() {
     } catch (err) {
       setError(extractErrorMessage(err, 'No se pudo enviar el mensaje. Inténtalo nuevamente.'));
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAction = async (actionPayload) => {
+    if (!selectedMatch) {
+      setError('Selecciona una partida activa.');
+      return;
+    }
+
+    setIsActionLoading(true);
+    resetFeedback();
+    try {
+      const response = await apiClient.post(
+        `${MATCHES_ENDPOINT}/${selectedMatch.id}/actions`,
+        actionPayload,
+      );
+      const { match, state } = response.data;
+      updateMatchState(match, state);
+      const lastLog = state.log?.slice().reverse().find((entry) => entry.actor === 'ai');
+      if (lastLog) {
+        setStatusMessage(lastLog.text);
+        speakText(lastLog.text);
+      }
+    } catch (actionError) {
+      console.error(actionError);
+      setError('No se pudo registrar la acción.');
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
   const handleVoiceTranscript = (transcript) => {
-    if (!transcript || !transcript.trim()) {
+    if (!transcript) {
+      return;
+    }
+    setStatusMessage(`Comando de voz recibido: ${transcript}`);
+    handleAction({ transcript });
+  };
+
+  const handleDiceUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
       return;
     }
 
@@ -178,9 +258,32 @@ function App() {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleChatSubmit = async (event) => {
     event.preventDefault();
-    sendMessage();
+    const trimmed = chatMessage.trim();
+    if (!trimmed) {
+      setError('Escribe un mensaje antes de enviarlo.');
+      return;
+    }
+
+    resetFeedback();
+    setIsActionLoading(true);
+    try {
+      const response = await apiClient.post(CHAT_ENDPOINT, { message: trimmed });
+      const assistantReply = response?.data?.response ?? '';
+      setChatLog((current) => [
+        ...current,
+        { sender: 'Tú', text: trimmed },
+        { sender: 'Asistente', text: assistantReply },
+      ]);
+      setChatMessage('');
+      speakText(assistantReply);
+    } catch (chatError) {
+      console.error(chatError);
+      setError('No se pudo contactar al asistente táctico.');
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
   const handleLogin = async (event) => {

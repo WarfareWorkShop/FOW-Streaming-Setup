@@ -80,6 +80,20 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
         return jsonify({"response": ai_response, "provider": provider})
 
+    @app.route("/api/dice/scan", methods=["POST"])
+    @jwt_required(optional=True)
+    def scan_dice():
+        if "image" not in request.files:
+            return jsonify({"error": "Debes adjuntar una imagen."}), 400
+
+        file_storage = request.files["image"]
+        try:
+            result = analyse_dice_image(file_storage.read())
+        except DiceProcessingError as exc:
+            return jsonify({"error": exc.message}), 400
+
+        return jsonify(result)
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(tactics_bp, url_prefix="/api/tactics")
 

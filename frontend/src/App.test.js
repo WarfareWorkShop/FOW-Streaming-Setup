@@ -20,16 +20,105 @@ jest.mock('./config', () => {
   };
 });
 
-const { apiClient } = require('./config');
+jest.mock('./config', () => ({
+  AUTH_ENDPOINTS: {
+    register: '/api/auth/register',
+    login: '/api/auth/login',
+    me: '/api/auth/me',
+  },
+  MATCHES_ENDPOINT: '/api/matches',
+  DICE_SCAN_ENDPOINT: '/api/dice/scan',
+  CHAT_ENDPOINT: '/api/chat',
+  apiClient: {
+    post: (...args) => mockPost(...args),
+    get: (...args) => mockGet(...args),
+    defaults: { headers: { common: {} } },
+  },
+  setAuthToken: (...args) => mockSetAuthToken(...args),
+}));
 
 describe('App', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeAll(() => {
+    window.speechSynthesis = {
+      cancel: jest.fn(),
+      speak: jest.fn(),
+    };
+    window.SpeechSynthesisUtterance = function SpeechSynthesisUtterance(text) {
+      this.text = text;
+    };
   });
 
-  it('envía un mensaje y muestra la respuesta del backend', async () => {
-    apiClient.post.mockResolvedValueOnce({ data: { response: 'Hola comandante' } });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGet.mockImplementation((url) => {
+      if (url === '/api/auth/me') {
+        return Promise.resolve({ data: { username: 'commander', email: 'cmd@example.com' } });
+      }
+      if (url === '/api/matches') {
+        return Promise.resolve({ data: { matches: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+    mockPost.mockImplementation((url, payload) => {
+      if (url === '/api/auth/login') {
+        return Promise.resolve({ data: { token: 'token-123' } });
+      }
+      if (url === '/api/matches') {
+        return Promise.resolve({
+          data: {
+            match: {
+              id: 1,
+              name: payload.name,
+              scenario: payload.scenario,
+              status: 'active',
+              state: {
+                turn: 'player',
+                player: { units: 6, morale: 10, victory_points: 0 },
+                ai: { units: 6, morale: 10, victory_points: 0 },
+                log: [],
+              },
+              participants: [],
+              invitations: [],
+              events: [],
+            },
+          },
+        });
+      }
+      if (url === '/api/matches/1/actions') {
+        return Promise.resolve({
+          data: {
+            match: {
+              id: 1,
+              name: 'Escaramuza',
+              scenario: 'Campo abierto',
+              status: 'active',
+              participants: [],
+              invitations: [],
+              events: [],
+              state: {
+                turn: 'player',
+                player: { units: 6, morale: 10, victory_points: 1 },
+                ai: { units: 5, morale: 10, victory_points: 0 },
+                log: [{ actor: 'ai', text: 'Contraataque enemigo' }],
+              },
+            },
+            state: {
+              turn: 'player',
+              player: { units: 6, morale: 10, victory_points: 1 },
+              ai: { units: 5, morale: 10, victory_points: 0 },
+              log: [{ actor: 'ai', text: 'Contraataque enemigo' }],
+            },
+          },
+        });
+      }
+      if (url === '/api/chat') {
+        return Promise.resolve({ data: { response: 'Informe táctico listo.' } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+  });
 
+  it('permite iniciar sesión y crear una partida contra la IA', async () => {
     render(<App />);
 
     await screen.findByText(/Sesión iniciada como/i);
@@ -37,8 +126,7 @@ describe('App', () => {
     const input = screen.getByLabelText(/mensaje/i);
     fireEvent.change(input, { target: { value: 'Hola' } });
 
-    const sendButton = screen.getByRole('button', { name: /enviar/i });
-    fireEvent.click(sendButton);
+    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
     await waitFor(() =>
       expect(apiClient.post).toHaveBeenCalledWith('/api/chat', {
@@ -54,6 +142,7 @@ describe('App', () => {
   it('muestra un mensaje de error cuando la petición falla', async () => {
     apiClient.post.mockRejectedValueOnce({ message: 'Network error' });
 
+  it('envía mensajes al asistente táctico', async () => {
     render(<App />);
 
     await screen.findByText(/Sesión iniciada como/i);
@@ -61,10 +150,11 @@ describe('App', () => {
     fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: 'Hola' } });
     fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
 
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('No se pudo enviar el mensaje')
-    );
+    const chatInput = screen.getByLabelText(/Mensaje/i);
+    fireEvent.change(chatInput, { target: { value: 'Necesito un informe' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enviar/i }));
 
-    expect(screen.getByText(/Aún no hay respuesta/)).toBeInTheDocument();
+    await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/api/chat', { message: 'Necesito un informe' }));
+    expect(screen.getByText(/Informe táctico listo/i)).toBeInTheDocument();
   });
 });

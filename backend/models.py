@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import re
 from datetime import datetime, timedelta
 
@@ -10,6 +11,14 @@ from backend.extensions import bcrypt, db
 
 class PasswordValidationError(ValueError):
     """Raised when a password does not meet the strength requirements."""
+
+
+class MatchStatus(enum.Enum):
+    """Enumerates the lifecycle states of a match."""
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    COMPLETED = "completed"
 
 
 def _validate_password(password: str) -> None:

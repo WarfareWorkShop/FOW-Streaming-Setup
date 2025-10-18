@@ -18,7 +18,7 @@ futuras.
 
 ## Estado actual de las funcionalidades
 
-### Implementado
+### Funcionalidades destacadas
 
 - Autenticación con JWT de acceso y refresco, revocación por lista negra y protección frente a ataques de fuerza bruta.
 - Endpoint `/api/chat` autenticado, con validaciones de contenido, listas de bloqueo y límites de velocidad configurables.
@@ -162,6 +162,13 @@ cd frontend
 npm install
 npm start
 ```
+
+## Pruebas automatizadas
+
+- Backend: `cd backend && pytest`
+- Frontend: `cd frontend && npm test`
+
+El workflow `.github/workflows/ci.yml` ejecuta ambas suites en cada pull request.
 
 ## Contribuir
 
