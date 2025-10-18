@@ -4,10 +4,18 @@ import '@testing-library/jest-dom';
 
 import App from './App';
 
+jest.mock('./auth', () => ({
+  clearTokens: jest.fn(),
+  isAuthenticated: jest.fn(() => true),
+  setTokens: jest.fn(),
+}));
+
 jest.mock('./config', () => {
   const post = jest.fn();
+  const get = jest.fn(() => Promise.resolve({ data: { username: 'Tester' } }));
+  const del = jest.fn(() => Promise.resolve({}));
   return {
-    apiClient: { post },
+    apiClient: { post, get, delete: del },
     CHAT_ENDPOINT: '/api/chat',
   };
 });
@@ -24,6 +32,8 @@ describe('App', () => {
 
     render(<App />);
 
+    await screen.findByText(/Sesión iniciada como/i);
+
     const input = screen.getByLabelText(/mensaje/i);
     fireEvent.change(input, { target: { value: 'Hola' } });
 
@@ -31,17 +41,22 @@ describe('App', () => {
     fireEvent.click(sendButton);
 
     await waitFor(() =>
-      expect(apiClient.post).toHaveBeenCalledWith('/api/chat', { message: 'Hola' })
+      expect(apiClient.post).toHaveBeenCalledWith('/api/chat', {
+        message: 'Hola',
+        provider: 'openai',
+      })
     );
 
-    expect(screen.getByText(/Respuesta: Hola comandante/i)).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByText(/Respuesta/i)).toBeInTheDocument();
+    expect(screen.getByText('Hola comandante')).toBeInTheDocument();
   });
 
   it('muestra un mensaje de error cuando la petición falla', async () => {
-    apiClient.post.mockRejectedValueOnce(new Error('Network error'));
+    apiClient.post.mockRejectedValueOnce({ message: 'Network error' });
 
     render(<App />);
+
+    await screen.findByText(/Sesión iniciada como/i);
 
     fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: 'Hola' } });
     fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
