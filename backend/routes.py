@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Deque, Dict
