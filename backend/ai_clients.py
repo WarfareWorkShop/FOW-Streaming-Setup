@@ -1,9 +1,14 @@
 """Utilities to talk with different AI providers."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict
 
 import requests
+from requests import RequestException
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AIProviderError(RuntimeError):
@@ -39,12 +44,16 @@ def call_openai(user_message: str, config: Dict[str, Any]) -> str:
         "Content-Type": "application/json",
     }
 
-    response = requests.post(
-        f"{base_url}/chat/completions",
-        headers=headers,
-        json=payload,
-        timeout=timeout,
-    )
+    try:
+        response = requests.post(
+            f"{base_url}/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=timeout,
+        )
+    except RequestException as exc:
+        LOGGER.exception("OpenAI network failure")
+        raise AIProviderError("OpenAI request failed due to a network error") from exc
     if response.status_code != 200:
         raise AIProviderError(
             f"OpenAI request failed with status {response.status_code}: {response.text}"
@@ -81,12 +90,18 @@ def call_anthropic(user_message: str, config: Dict[str, Any]) -> str:
         "content-type": "application/json",
     }
 
-    response = requests.post(
-        f"{base_url}/v1/messages",
-        headers=headers,
-        json=payload,
-        timeout=timeout,
-    )
+    try:
+        response = requests.post(
+            f"{base_url}/v1/messages",
+            headers=headers,
+            json=payload,
+            timeout=timeout,
+        )
+    except RequestException as exc:
+        LOGGER.exception("Anthropic network failure")
+        raise AIProviderError(
+            "Anthropic request failed due to a network error"
+        ) from exc
     if response.status_code != 200:
         raise AIProviderError(
             f"Anthropic request failed with status {response.status_code}: {response.text}"
@@ -119,12 +134,16 @@ def call_lmstudio(user_message: str, config: Dict[str, Any]) -> str:
         "Content-Type": "application/json",
     }
 
-    response = requests.post(
-        f"{base_url}/chat/completions",
-        headers=headers,
-        json=payload,
-        timeout=timeout,
-    )
+    try:
+        response = requests.post(
+            f"{base_url}/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=timeout,
+        )
+    except RequestException as exc:
+        LOGGER.exception("LM Studio network failure")
+        raise AIProviderError("LM Studio request failed due to a network error") from exc
     if response.status_code != 200:
         raise AIProviderError(
             f"LM Studio request failed with status {response.status_code}: {response.text}"
@@ -145,7 +164,7 @@ PROVIDER_HANDLERS = {
 
 
 def generate_ai_response(user_message: str, provider: str, config: Dict[str, Any]) -> str:
-    provider_key = provider.lower()
+    provider_key = str(provider).lower()
     if provider_key not in PROVIDER_HANDLERS:
         raise AIProviderError(f"Unsupported AI provider: {provider}")
 
