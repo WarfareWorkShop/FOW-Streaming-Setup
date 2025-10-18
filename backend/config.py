@@ -1,4 +1,37 @@
+"""Application configuration helpers."""
+
 import os
+from typing import Optional
+
+from dotenv import load_dotenv
+
+# Load variables defined in a local .env file, if present.
+load_dotenv()
+
+
+def _int_env(name: str, default: int) -> int:
+    """Return an integer environment variable or a default value."""
+
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
+def _float_env(name: str, default: float) -> float:
+    """Return a float environment variable or a default value."""
+
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
 
 
 class Config:

@@ -1,3 +1,28 @@
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict
+
+try:  # pragma: no cover - executed only when SDK is available
+    import openai
+    from openai.error import OpenAIError
+except ModuleNotFoundError:  # pragma: no cover - fallback for environments sin SDK
+    class OpenAIError(Exception):
+        """Fallback error when the OpenAI SDK is missing."""
+
+    class _ChatCompletion:
+        @staticmethod
+        def create(*_: Any, **__: Any) -> Dict[str, Any]:
+            raise OpenAIError(
+                "El paquete 'openai' no está instalado. Instálalo para usar la IA."
+            )
+
+    class _OpenAIStub:
+        api_key: str | None = None
+        ChatCompletion = _ChatCompletion
+
+    openai = _OpenAIStub()  # type: ignore[assignment]
+
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
