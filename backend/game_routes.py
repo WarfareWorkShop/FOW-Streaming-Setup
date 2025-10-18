@@ -100,33 +100,68 @@ def create_match():
     payload = request.get_json(silent=True) or {}
     name = (payload.get("name") or "").strip()
     opponent_type = (payload.get("opponent_type") or "ai").lower()
+    mode = (payload.get("mode") or "versus").lower()
+    raw_slots = payload.get("player_slots")
+    try:
+        player_slots = int(raw_slots) if raw_slots is not None else None
+    except (TypeError, ValueError):
+        return jsonify({"error": "El número de jugadores debe ser un entero."}), HTTPStatus.BAD_REQUEST
     scenario = (payload.get("scenario") or "").strip() or None
 
     if not name:
         return jsonify({"error": "El nombre de la partida es obligatorio."}), HTTPStatus.BAD_REQUEST
 
+    valid_modes = {"solo", "solo_ai", "versus", "tournament"}
+    if mode not in valid_modes:
+        return jsonify({"error": "Modo de partida inválido."}), HTTPStatus.BAD_REQUEST
+
     if opponent_type not in {"ai", "human"}:
         return jsonify({"error": "Tipo de oponente inválido."}), HTTPStatus.BAD_REQUEST
+
+    if mode == "solo":
+        player_slots = 1
+        opponent_type = "ai"
+    elif mode == "solo_ai":
+        player_slots = 2
+        opponent_type = "ai"
+    elif mode == "versus":
+        if player_slots is None:
+            player_slots = 2
+        if player_slots < 2 or player_slots > 8:
+            return (
+                jsonify({"error": "Las partidas normales admiten entre 2 y 8 jugadores."}),
+                HTTPStatus.BAD_REQUEST,
+            )
+    else:  # tournament
+        if player_slots is None:
+            player_slots = 8
+        if player_slots < 4 or player_slots > 10:
+            return (
+                jsonify({"error": "Los torneos admiten entre 4 y 10 plazas."}),
+                HTTPStatus.BAD_REQUEST,
+            )
 
     match = Match(
         name=name,
         scenario=scenario,
         host_id=user.id,
         opponent_type=opponent_type,
-        status=MatchStatus.ACTIVE if opponent_type == "ai" else MatchStatus.PENDING,
+        mode=mode,
+        player_slots=player_slots,
+        status=MatchStatus.ACTIVE if opponent_type != "human" else MatchStatus.PENDING,
         current_turn="player",
-        state=initial_state(scenario),
+        state=initial_state(scenario, mode=mode, player_slots=player_slots),
     )
     db.session.add(match)
     db.session.flush()
 
     _ensure_participant(match, user, role="host")
 
-    if opponent_type == "ai":
+    if opponent_type != "human":
         event = MatchEvent(
             match_id=match.id,
             actor="system",
-            description="Se inicia un enfrentamiento contra la IA.",
+            description="Se inicia un enfrentamiento automatizado.",
         )
         db.session.add(event)
     else:

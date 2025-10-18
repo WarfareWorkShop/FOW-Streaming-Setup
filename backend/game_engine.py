@@ -13,7 +13,12 @@ class GameRuleError(ValueError):
     message: str
 
 
-def initial_state(scenario: str | None = None) -> Dict[str, Any]:
+def initial_state(
+    scenario: str | None = None,
+    *,
+    mode: str = "versus",
+    player_slots: int = 2,
+) -> Dict[str, Any]:
     """Return the initial match state for the provided scenario."""
 
     battlefield = scenario or "Encuentro estándar"
@@ -21,6 +26,8 @@ def initial_state(scenario: str | None = None) -> Dict[str, Any]:
         "round": 1,
         "battlefield": battlefield,
         "turn": "player",
+        "mode": mode,
+        "player_slots": max(1, int(player_slots)),
         "player": {"units": 6, "morale": 10, "victory_points": 0},
         "ai": {"units": 6, "morale": 10, "victory_points": 0},
         "log": [

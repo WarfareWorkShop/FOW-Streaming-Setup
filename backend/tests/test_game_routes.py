@@ -20,13 +20,15 @@ def test_create_ai_match_and_execute_turn(client, auth_header, monkeypatch):
 
     response = client.post(
         "/api/matches",
-        json={"name": "Escaramuza", "opponent_type": "ai"},
+        json={"name": "Escaramuza", "opponent_type": "ai", "mode": "solo_ai"},
         headers=headers,
     )
     assert response.status_code == 201
     data = response.get_json()
     match_id = data["match"]["id"]
     assert data["match"]["status"] == MatchStatus.ACTIVE.value
+    assert data["match"]["mode"] == "solo_ai"
+    assert data["match"]["player_slots"] == 2
 
     # Force deterministic AI behaviour
     monkeypatch.setattr("backend.game_engine.random.randint", lambda *args, **kwargs: 2)
@@ -52,7 +54,13 @@ def test_invitation_flow(client, user_factory):
 
     create_resp = client.post(
         "/api/matches",
-        json={"name": "Batalla", "opponent_type": "human", "invitee_username": "guest"},
+        json={
+            "name": "Batalla",
+            "opponent_type": "human",
+            "invitee_username": "guest",
+            "mode": "tournament",
+            "player_slots": 6,
+        },
         headers=host_headers,
     )
     assert create_resp.status_code == 201
@@ -65,6 +73,8 @@ def test_invitation_flow(client, user_factory):
     assert accept_resp.status_code == 200
     match_data = accept_resp.get_json()["match"]
     assert match_data["status"] == MatchStatus.ACTIVE.value
+    assert match_data["mode"] == "tournament"
+    assert match_data["player_slots"] == 6
     assert any(p["user"]["username"] == "guest" for p in match_data["participants"])
 
 

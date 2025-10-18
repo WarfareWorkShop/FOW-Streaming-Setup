@@ -92,6 +92,7 @@ class Config:
     CHAT_BLOCKED_PHRASES = _split_csv(os.getenv("CHAT_BLOCKED_PHRASES"))
 
     DEFAULT_SCENARIO_ROLE = os.getenv("DEFAULT_SCENARIO_ROLE", "battlefield analyst")
+    MAX_DICE_UPLOAD_SIZE = int(os.getenv("MAX_DICE_UPLOAD_SIZE", str(5 * 1024 * 1024)))
 
     @staticmethod
     def ensure_secret_key(value: str | None) -> str:
