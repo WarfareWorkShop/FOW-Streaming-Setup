@@ -1,8 +1,12 @@
-import re
+from __future__ import annotations
 
-from flask_sqlalchemy import SQLAlchemy
+import re
+from datetime import timedelta
+
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token
+from flask_sqlalchemy import SQLAlchemy
+
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -39,13 +43,13 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password = db.Column(db.String(128), nullable=False)
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         _validate_password(password)
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = bcrypt.generate_password_hash(password).decode("utf-8")
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         return bcrypt.check_password_hash(self.password, password)
 
-    def get_token(self, expires_in=3600):
-        return create_access_token(identity=self.id)
-
+    def get_token(self, expires_in: int = 3600) -> str:
+        expires_delta = timedelta(seconds=max(1, int(expires_in)))
+        return create_access_token(identity=self.id, expires_delta=expires_delta)
