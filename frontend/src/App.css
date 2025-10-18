@@ -1,0 +1,106 @@
+.app-container {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 2rem 1.5rem 4rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+section {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+section h2 {
+  margin-top: 0;
+}
+
+form,
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+input,
+textarea,
+select,
+button,
+a.tool-button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+button,
+a.tool-button {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:disabled,
+a.tool-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+button:hover:not(:disabled),
+a.tool-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.35);
+}
+
+.tool-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.tool-button {
+  min-width: 180px;
+}
+
+ul {
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .app-container {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  section {
+    padding: 1.25rem;
+  }
+}
