@@ -1,32 +1,63 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import VoiceInteraction from './VoiceInteraction';
 import { CHAT_ENDPOINT, apiClient } from './config';
+import {
+  DEFAULT_LANGUAGE,
+  SUPPORTED_LANGUAGES,
+  getLanguageLabel,
+  getSpeechRecognitionLocale,
+  normaliseLanguage,
+  translate,
+} from './i18n';
 
 function App() {
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorKey, setErrorKey] = useState(null);
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+
+  const normalisedLanguage = useMemo(() => normaliseLanguage(language), [language]);
+
+  const t = useCallback(
+    (key, replacements) => translate(key, normalisedLanguage, replacements),
+    [normalisedLanguage]
+  );
+
+  const speechLocale = useMemo(
+    () => getSpeechRecognitionLocale(normalisedLanguage),
+    [normalisedLanguage]
+  );
+
+  const errorMessage = errorKey ? t(errorKey) : null;
+
+  const handleLanguageChange = useCallback((event) => {
+    setLanguage(normaliseLanguage(event.target.value));
+  }, []);
 
   const sendMessage = async (messageToSend = message) => {
     const trimmedMessage = messageToSend.trim();
 
     if (!trimmedMessage) {
-      setError('Por favor ingresa un mensaje antes de enviar.');
+      setErrorKey('app.errors.emptyMessage');
       return;
     }
 
     setIsLoading(true);
-    setError(null);
+    setErrorKey(null);
 
     try {
-      const res = await apiClient.post(CHAT_ENDPOINT, { message: trimmedMessage });
+      const res = await apiClient.post(
+        CHAT_ENDPOINT,
+        { message: trimmedMessage },
+        { headers: { 'Accept-Language': normalisedLanguage } }
+      );
       setResponse(res?.data?.response ?? '');
       setMessage('');
     } catch (err) {
       console.error(err);
-      setError('No se pudo enviar el mensaje. Inténtalo nuevamente.');
+      setErrorKey('app.errors.sendFailed');
     } finally {
       setIsLoading(false);
     }
@@ -48,27 +79,45 @@ function App() {
 
   return (
     <div>
-      <h1>Flames of War - AI Opponent</h1>
+      <h1>{t('app.title')}</h1>
+      <div>
+        <label htmlFor="language-select">{t('languageSelector.label')}</label>{' '}
+        <select
+          id="language-select"
+          value={normalisedLanguage}
+          onChange={handleLanguageChange}
+        >
+          {SUPPORTED_LANGUAGES.map((code) => (
+            <option key={code} value={code}>
+              {getLanguageLabel(code)}
+            </option>
+          ))}
+        </select>
+      </div>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Escribe tu mensaje..."
-          aria-label="mensaje"
+          placeholder={t('app.placeholder')}
+          aria-label={t('app.labels.message')}
         />
         <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Enviando...' : 'Enviar'}
+          {isLoading ? t('app.buttons.sending') : t('app.buttons.send')}
         </button>
       </form>
-      {isLoading && <p role="status">Enviando mensaje...</p>}
-      {error && (
+      {isLoading && <p role="status">{t('app.status.sending')}</p>}
+      {errorMessage && (
         <p role="alert" style={{ color: 'red' }}>
-          {error}
+          {errorMessage}
         </p>
       )}
-      <p>Respuesta: {response || 'Aún no hay respuesta.'}</p>
-      <VoiceInteraction onTranscript={handleVoiceTranscript} />
+      <p>{t('app.response', { response: response || t('app.status.noResponse') })}</p>
+      <VoiceInteraction
+        speechLocale={speechLocale}
+        onTranscript={handleVoiceTranscript}
+        t={t}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import partial
+
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -11,6 +13,7 @@ from backend.ai_clients import (
     generate_ai_response,
 )
 from backend.config import Config
+from backend.i18n import get_request_language, translate
 from backend.models import bcrypt, db
 from backend.routes import auth_bp
 
@@ -33,7 +36,9 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     @app.route("/")
     def index() -> str:
-        return render_template("index.html")
+        language = get_request_language()
+        translator = partial(translate, language=language)
+        return render_template("index.html", language=language, t=translator)
 
     @app.route("/api/chat", methods=["POST"])
     def chat():
@@ -41,16 +46,28 @@ def create_app(config_class: type[Config] = Config) -> Flask:
         user_message = (data.get("message") or "").strip()
         provider = data.get("provider") or app.config["DEFAULT_AI_PROVIDER"]
 
+        language = get_request_language()
+
         if not user_message:
-            return jsonify({"error": "Message is required"}), 400
+            return jsonify({"error": translate("backend.chat.errors.message_required", language)}), 400
 
         try:
             ai_response = generate_ai_response(user_message, provider, app.config)
         except MissingConfigurationError as exc:
-            return jsonify({"error": str(exc)}), 400
+            error = translate(
+                "backend.chat.errors.missing_configuration",
+                language,
+                details=str(exc),
+            )
+            return jsonify({"error": error}), 400
         except AIProviderError as exc:  # pragma: no cover - network failure path
             app.logger.exception("AI provider error")
-            return jsonify({"error": str(exc)}), 502
+            error = translate(
+                "backend.chat.errors.provider_error",
+                language,
+                details=str(exc),
+            )
+            return jsonify({"error": error}), 502
 
         return jsonify({"response": ai_response, "provider": provider})
 

@@ -1,16 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const SpeechRecognition =
   (typeof window !== 'undefined' &&
     (window.SpeechRecognition || window.webkitSpeechRecognition || null)) ||
   null;
 
-const VoiceInteraction = ({ onTranscript = () => {} }) => {
+const VoiceInteraction = ({ onTranscript = () => {}, speechLocale = 'es-ES', t }) => {
   const recognitionRef = useRef(null);
   const [text, setText] = useState('');
   const [isSupported, setIsSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorKey, setErrorKey] = useState(null);
+
+  const errorMessage = useMemo(() => (errorKey && t ? t(errorKey) : null), [errorKey, t]);
 
   useEffect(() => {
     if (!SpeechRecognition) {
@@ -22,7 +24,7 @@ const VoiceInteraction = ({ onTranscript = () => {} }) => {
     recognitionRef.current = recognition;
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'es-ES';
+    recognition.lang = speechLocale;
 
     recognition.onresult = (event) => {
       let finalTranscript = '';
@@ -41,13 +43,13 @@ const VoiceInteraction = ({ onTranscript = () => {} }) => {
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      let message = 'Ocurrió un problema con el reconocimiento de voz.';
+      let messageKey = 'voice.errors.generic';
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        message = 'No se concedieron permisos para usar el micrófono.';
+        messageKey = 'voice.errors.notAllowed';
       } else if (event.error === 'no-speech') {
-        message = 'No se detectó audio. Intenta nuevamente.';
+        messageKey = 'voice.errors.noSpeech';
       }
-      setError(message);
+      setErrorKey(messageKey);
       setIsListening(false);
     };
 
@@ -59,7 +61,13 @@ const VoiceInteraction = ({ onTranscript = () => {} }) => {
       recognition.stop();
       recognitionRef.current = null;
     };
-  }, [onTranscript]);
+  }, [onTranscript, speechLocale]);
+
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = speechLocale;
+    }
+  }, [speechLocale]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) {
@@ -67,12 +75,12 @@ const VoiceInteraction = ({ onTranscript = () => {} }) => {
     }
 
     try {
-      setError(null);
+      setErrorKey(null);
       recognitionRef.current.start();
       setIsListening(true);
     } catch (err) {
       console.error('Unable to start speech recognition:', err);
-      setError('No se pudo iniciar el reconocimiento de voz.');
+      setErrorKey('voice.errors.startFailure');
     }
   }, []);
 
@@ -84,24 +92,24 @@ const VoiceInteraction = ({ onTranscript = () => {} }) => {
   }, []);
 
   if (!isSupported) {
-    return <p>La interacción por voz no es compatible con este navegador.</p>;
+    return <p>{t ? t('voice.unsupported') : 'Voice interaction not supported.'}</p>;
   }
 
   return (
     <div>
-      <h2>Interacción por voz</h2>
-      <p>{text || 'Presiona "Iniciar voz" y habla para enviar un mensaje automáticamente.'}</p>
+      <h2>{t ? t('voice.title') : 'Voice interaction'}</h2>
+      <p>{text || (t ? t('voice.instructions') : '')}</p>
       <div>
         <button type="button" onClick={startListening} disabled={isListening}>
-          Iniciar voz
+          {t ? t('voice.buttons.start') : 'Start voice'}
         </button>
         <button type="button" onClick={stopListening} disabled={!isListening}>
-          Detener
+          {t ? t('voice.buttons.stop') : 'Stop'}
         </button>
       </div>
-      {error && (
+      {errorMessage && (
         <p role="alert" aria-live="assertive" style={{ color: 'red' }}>
-          {error}
+          {errorMessage}
         </p>
       )}
     </div>
