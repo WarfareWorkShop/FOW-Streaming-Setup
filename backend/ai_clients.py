@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import Any, Dict
 
 import requests
@@ -11,8 +12,16 @@ from requests import RequestException
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class AIProviderError(RuntimeError):
     """Base error raised when an AI provider cannot fulfil a request."""
+
+    message: str
+    provider: str | None = None
+    status_code: int | None = None
+
+    def __str__(self) -> str:
+        return self.message
 
 
 class MissingConfigurationError(AIProviderError):
@@ -26,7 +35,9 @@ def _build_messages(user_message: str) -> list[Dict[str, str]]:
 def call_openai(user_message: str, config: Dict[str, Any]) -> str:
     api_key = config.get("OPENAI_API_KEY")
     if not api_key:
-        raise MissingConfigurationError("OPENAI_API_KEY is not configured")
+        raise MissingConfigurationError(
+            "OPENAI_API_KEY is not configured", provider="openai"
+        )
 
     base_url = config.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
     model = config.get("OPENAI_MODEL", "gpt-3.5-turbo")
@@ -53,23 +64,37 @@ def call_openai(user_message: str, config: Dict[str, Any]) -> str:
         )
     except RequestException as exc:
         LOGGER.exception("OpenAI network failure")
-        raise AIProviderError("OpenAI request failed due to a network error") from exc
-    if response.status_code != 200:
         raise AIProviderError(
-            f"OpenAI request failed with status {response.status_code}: {response.text}"
+            "OpenAI request failed due to a network error",
+            provider="openai",
+        ) from exc
+    if response.status_code != 200:
+        LOGGER.warning(
+            "OpenAI HTTP error",
+            extra={"status_code": response.status_code, "body": response.text[:512]},
+        )
+        raise AIProviderError(
+            "OpenAI request was rejected.",
+            provider="openai",
+            status_code=response.status_code,
         )
 
     data = response.json()
     try:
         return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError, TypeError) as exc:
-        raise AIProviderError("Unexpected response format from OpenAI") from exc
+        raise AIProviderError(
+            "Unexpected response format from OpenAI",
+            provider="openai",
+        ) from exc
 
 
 def call_anthropic(user_message: str, config: Dict[str, Any]) -> str:
     api_key = config.get("ANTHROPIC_API_KEY")
     if not api_key:
-        raise MissingConfigurationError("ANTHROPIC_API_KEY is not configured")
+        raise MissingConfigurationError(
+            "ANTHROPIC_API_KEY is not configured", provider="anthropic"
+        )
 
     base_url = config.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/")
     model = config.get("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
@@ -100,11 +125,18 @@ def call_anthropic(user_message: str, config: Dict[str, Any]) -> str:
     except RequestException as exc:
         LOGGER.exception("Anthropic network failure")
         raise AIProviderError(
-            "Anthropic request failed due to a network error"
+            "Anthropic request failed due to a network error",
+            provider="anthropic",
         ) from exc
     if response.status_code != 200:
+        LOGGER.warning(
+            "Anthropic HTTP error",
+            extra={"status_code": response.status_code, "body": response.text[:512]},
+        )
         raise AIProviderError(
-            f"Anthropic request failed with status {response.status_code}: {response.text}"
+            "Anthropic request was rejected.",
+            provider="anthropic",
+            status_code=response.status_code,
         )
 
     data = response.json()
@@ -117,7 +149,10 @@ def call_anthropic(user_message: str, config: Dict[str, Any]) -> str:
             return content.strip()
         raise TypeError("Unexpected content type")
     except (KeyError, TypeError) as exc:
-        raise AIProviderError("Unexpected response format from Anthropic") from exc
+        raise AIProviderError(
+            "Unexpected response format from Anthropic",
+            provider="anthropic",
+        ) from exc
 
 
 def call_lmstudio(user_message: str, config: Dict[str, Any]) -> str:
@@ -133,6 +168,9 @@ def call_lmstudio(user_message: str, config: Dict[str, Any]) -> str:
     headers = {
         "Content-Type": "application/json",
     }
+    auth_token = config.get("LM_STUDIO_AUTH_TOKEN")
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
 
     try:
         response = requests.post(
@@ -143,17 +181,29 @@ def call_lmstudio(user_message: str, config: Dict[str, Any]) -> str:
         )
     except RequestException as exc:
         LOGGER.exception("LM Studio network failure")
-        raise AIProviderError("LM Studio request failed due to a network error") from exc
-    if response.status_code != 200:
         raise AIProviderError(
-            f"LM Studio request failed with status {response.status_code}: {response.text}"
+            "LM Studio request failed due to a network error",
+            provider="lmstudio",
+        ) from exc
+    if response.status_code != 200:
+        LOGGER.warning(
+            "LM Studio HTTP error",
+            extra={"status_code": response.status_code, "body": response.text[:512]},
+        )
+        raise AIProviderError(
+            "LM Studio request was rejected.",
+            provider="lmstudio",
+            status_code=response.status_code,
         )
 
     data = response.json()
     try:
         return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError, TypeError) as exc:
-        raise AIProviderError("Unexpected response format from LM Studio") from exc
+        raise AIProviderError(
+            "Unexpected response format from LM Studio",
+            provider="lmstudio",
+        ) from exc
 
 
 PROVIDER_HANDLERS = {
@@ -166,7 +216,9 @@ PROVIDER_HANDLERS = {
 def generate_ai_response(user_message: str, provider: str, config: Dict[str, Any]) -> str:
     provider_key = str(provider).lower()
     if provider_key not in PROVIDER_HANDLERS:
-        raise AIProviderError(f"Unsupported AI provider: {provider}")
+        raise AIProviderError(
+            f"Unsupported AI provider: {provider}", provider=provider_key
+        )
 
     handler = PROVIDER_HANDLERS[provider_key]
     return handler(user_message, config)

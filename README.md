@@ -8,10 +8,9 @@ futuras.
 
 ## Estructura del proyecto
 
-- **backend/**: Aplicación Flask con registro, inicio de sesión y un endpoint de chat con integración con OpenAI, Anthropic y un
-  modelo local compatible con LM Studio.
-- **frontend/src/App.js**: Interfaz React mínima para enviar mensajes de texto al backend.
-- **frontend/src/VoiceInteraction.js**: Ejemplo de transcripción de voz en el navegador (no integrado con el backend).
+- **backend/**: Aplicación Flask con autenticación reforzada, límites de velocidad y endpoints tácticos específicos para Flames of War.
+- **frontend/src/App.js**: Centro táctico React con gestión de sesión, chat, analizador de listas, entrenador virtual y bitácora de turnos.
+- **frontend/src/VoiceInteraction.js**: Componente de reconocimiento de voz integrado con el flujo de registro de turnos y chat.
 - **frontend/imageprocessing.py**: Script independiente con utilidades de OpenCV para analizar imágenes estáticas.
 - **launcher.py**: Lanzador interactivo para instalar dependencias y arrancar los servidores.
 - **configurator.py**: Asistente para crear o actualizar el archivo `.env` del proyecto.
@@ -19,22 +18,15 @@ futuras.
 
 ## Estado actual de las funcionalidades
 
-### Implementado
+### Funcionalidades destacadas
 
-- Registro e inicio de sesión con almacenamiento en SQLite y emisión de JWT.
-- Endpoint `/api/chat` capaz de delegar en OpenAI, Anthropic o un endpoint local de LM Studio en función de la configuración.
-- Interfaz React para enviar mensajes al endpoint de chat y visualizar las respuestas.
-- Ejemplo de reconocimiento de voz en el navegador mediante `webkitSpeechRecognition`.
-- Script de procesamiento de imágenes con OpenCV que detecta contornos y genera una imagen de salida.
-
-### TODO / Próximos pasos
-
-- **IA como oponente**: definir lógica de juego, almacenamiento de estado y comunicación de turnos.
-- **Procesamiento de imagen en tiempo real**: integrar `imageprocessing.py` con el backend para automatizar la lectura de dados.
-- **Interacción por voz end-to-end**: conectar `VoiceInteraction.js` con la API y habilitar respuestas habladas.
-- **Configuración y automatización de streaming**: documentar perfiles reales de OBS/Mist Server y proveer scripts de despliegue.
-- **Gestión avanzada de usuarios y partidas**: roles, invitaciones, emparejamiento y persistencia de sesiones.
-- **Pruebas automatizadas**: añadir suites de tests para backend y frontend, así como pipelines de CI/CD.
+- Autenticación con JWT de acceso y refresco, revocación por lista negra y protección frente a ataques de fuerza bruta.
+- Endpoint `/api/chat` autenticado, con validaciones de contenido, listas de bloqueo y límites de velocidad configurables.
+- Circuito táctico con endpoints para análisis de escenario, evaluación de listas y coaching contextual.
+- Bitácora persistente de turnos para crear una biblioteca de replays y analizar decisiones posteriores a la partida.
+- Interfaz React con login completo, panel táctico, reconocimiento de voz integrado y accesos directos a herramientas externas de Flames of War.
+- Scripts de Flask-Migrate y documentación para mantener el esquema de base de datos actualizado.
+- Pruebas automatizadas para la lógica principal del backend y del frontend.
 
 ## Requisitos
 
@@ -50,85 +42,32 @@ El backend puede conectarse a tres proveedores distintos. Configura las variable
 - `DEFAULT_AI_PROVIDER`: `openai`, `anthropic` o `lmstudio` (por defecto `openai`).
 - `AI_REQUEST_TIMEOUT`: tiempo máximo en segundos para esperar la respuesta (por defecto `30`).
 
-### Endpoints de Autenticación
+### Endpoints de Autenticación y gestión de sesión
 
-El backend expone un conjunto de endpoints JSON para la gestión de usuarios y sesiones. Todos devuelven respuestas en formato `application/json`.
+El backend expone endpoints JSON para la gestión de usuarios. Las respuestas utilizan el campo `message` para describir errores.
 
-#### `POST /register`
+| Método & Ruta             | Descripción                                                                 | Notas de seguridad                              |
+| ------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------- |
+| `POST /api/auth/register` | Registra un nuevo usuario aplicando políticas de contraseña y (opcional) CAPTCHA. | Configura `RECAPTCHA_SECRET_KEY` para activarlo. |
+| `POST /api/auth/login`    | Devuelve `accessToken`, `refreshToken` y `expiresIn` cuando las credenciales son válidas. | Bloquea intentos fallidos repetidos.            |
+| `POST /api/auth/refresh`  | Emite un nuevo token de acceso a partir del token de refresco.              | Envía el refresh token en la cabecera `Authorization`. |
+| `POST /api/auth/logout`   | Revoca el token actual añadiéndolo a la lista negra.                        | Recomendado al cerrar sesión en clientes web.   |
+| `GET /api/auth/me`        | Devuelve `id`, `username` y `email` del usuario autenticado.                | Requiere token de acceso vigente.               |
 
-- **Payload**
+Los tokens se emiten con expiraciones configurables (`JWT_ACCESS_TOKEN_MINUTES`, `JWT_REFRESH_TOKEN_DAYS`). Cada cambio de contraseña revoca automáticamente los tokens emitidos con anterioridad.
 
-  ```json
-  {
-    "username": "usuario",
-    "password": "contraseña"
-  }
-  ```
+### Endpoints tácticos para Flames of War
 
-- **Respuestas**
-  - `201 Created`: registro exitoso.
-    ```json
-    {"message": "User registered successfully!"}
-    ```
-  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
-    ```json
-    {"message": "Username and password are required."}
-    ```
-    ```json
-    {"message": "Username and password cannot be empty."}
-    ```
-  - `409 Conflict`: el nombre de usuario ya existe.
-    ```json
-    {"message": "Username is already taken."}
-    ```
-  - `500 Internal Server Error`: error al crear el usuario.
-    ```json
-    {"message": "Could not register user. Please try again later."}
-    ```
+Todos los endpoints bajo `/api/tactics` requieren autenticación y respetan el límite definido en `TACTICS_RATE_LIMIT` (por defecto `20/minute`).
 
-#### `POST /login`
-
-- **Payload**
-
-  ```json
-  {
-    "username": "usuario",
-    "password": "contraseña"
-  }
-  ```
-
-- **Respuestas**
-  - `200 OK`: credenciales válidas, devuelve token JWT.
-    ```json
-    {"token": "<jwt>"}
-    ```
-  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
-    ```json
-    {"message": "Username and password are required."}
-    ```
-    ```json
-    {"message": "Username and password cannot be empty."}
-    ```
-  - `401 Unauthorized`: credenciales inválidas.
-    ```json
-    {"message": "Invalid credentials!"}
-    ```
-
-#### `GET /me`
-
-- **Headers**
-  - `Authorization: Bearer <jwt>`
-
-- **Respuestas**
-  - `200 OK`: devuelve la información del usuario autenticado.
-    ```json
-    {
-      "id": 1,
-      "username": "usuario"
-    }
-    ```
-  - `401 Unauthorized`: token ausente o inválido (gestionado por JWT).
-  - `404 Not Found`: el usuario referenciado por el token no existe.
+| Método & Ruta                       | Propósito                                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `POST /api/tactics/scenario-advice` | Genera recomendaciones basadas en el estado estructurado de la batalla (turno, unidades, clima, terreno...). |
+| `POST /api/tactics/army-list`       | Evalúa la sinergia de una lista de ejército y sugiere mejoras de composición.                               |
+| `POST /api/tactics/coach`           | Activa un modo de coaching con un rol táctico específico y devuelve prioridades y advertencias personalizadas. |
+| `POST /api/tactics/logs`            | Guarda una bitácora de turno con entradas provenientes del chat o de la voz.                                |
+| `GET /api/tactics/logs`             | Recupera las bitácoras más recientes del usuario autenticado.                                               |
+| `DELETE /api/tactics/logs/<log_id>` | Elimina una bitácora previa del usuario.                                                                    |
 
 ### Configuración de la base de datos
 
@@ -223,6 +162,13 @@ cd frontend
 npm install
 npm start
 ```
+
+## Pruebas automatizadas
+
+- Backend: `cd backend && pytest`
+- Frontend: `cd frontend && npm test`
+
+El workflow `.github/workflows/ci.yml` ejecuta ambas suites en cada pull request.
 
 ## Contribuir
 

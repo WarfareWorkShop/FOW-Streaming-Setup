@@ -1,0 +1,38 @@
+system:
+  name: FlamesOfWar-Mist
+  log_level: info
+  max_connections: 200
+
+listen:
+  - address: 0.0.0.0
+    port: 8080
+    proto: http
+
+streams:
+  - name: fow-main
+    source: rtmp://localhost/live/fow
+    dvr: true
+    outputs:
+      - type: hls
+        path: /var/www/mist/hls
+        segment_duration: 4
+      - type: dash
+        path: /var/www/mist/dash
+        segment_duration: 4
+
+  - name: commentators
+    source: rtmp://localhost/live/casters
+    outputs:
+      - type: hls
+        path: /var/www/mist/hls_casters
+        segment_duration: 4
+
+security:
+  allowed_ips:
+    - 127.0.0.1
+    - 10.0.0.0/24
+  authentication:
+    enabled: true
+    credentials:
+      username: fowcaster
+      password: cambio-esto

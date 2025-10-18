@@ -18,23 +18,16 @@ described in earlier drafts of the project.
 
 ## Current functionality
 
-### Implemented
+### Highlights
 
-- User registration and login backed by SQLite with JWT issuance.
-- `/api/chat` endpoint that returns a mock response for frontend-backend integration tests.
-- Simple React UI to send a message and display the mocked response.
-- Voice recognition example using `webkitSpeechRecognition`.
-- Image-processing helper that detects contours and saves a processed image to disk.
-
-### TODO / Next steps
-
-- **Real OpenAI integration**: call the API, handle credentials securely and surface errors to the client.
-- **AI opponent gameplay**: define game flow, turn handling and persistence of match state.
-- **Real-time image processing**: connect `imageprocessing.py` to the backend to automate dice/result detection.
-- **End-to-end voice interaction**: wire `VoiceInteraction.js` into the API and support spoken responses.
-- **Streaming configuration (OBS + Mist Server)**: provide actual configuration files/scripts and automation steps.
-- **Advanced user & match management**: roles, invitations, matchmaking and session persistence.
-- **Automated testing & deployment**: add backend/frontend test suites and CI/CD pipelines.
+- Authentication with strengthened password policies and JWT issuance.
+- Match API featuring AI opponents, invitations between users and detailed event logs.
+- Integrated image processing to detect dice hits and generate overlay previews.
+- End-to-end voice interaction: browser transcription, automatic action submission and spoken responses via Speech Synthesis.
+- Tactical chat with support for OpenAI, Anthropic and LM Studio backends.
+- React dashboard with match state visualisation, combat history and auxiliary tools.
+- OBS/MistServer configurations plus automation scripts to recreate the streaming stack.
+- Backend and frontend test suites complemented by a GitHub Actions workflow.
 
 ## Requirements
 
@@ -52,7 +45,11 @@ pip install -r requirements.txt
 flask --app app run
 ```
 
-> **TODO**: set environment variables for `SECRET_KEY`, `DATABASE_URI` and the OpenAI key once the real integration is in place.
+Set the following environment variables before launching Flask (a `.env` file is supported):
+
+- `SECRET_KEY`: secret used by Flask and JWT.
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `LM_STUDIO_BASE_URL` depending on the provider you plan to use.
+- `DATABASE_URI` if you want to replace the default SQLite database.
 
 ### Interactive helpers
 
@@ -66,7 +63,14 @@ npm install
 npm start
 ```
 
-> **TODO**: extend the React app to include voice controls, match state management and visual overlays.
+The React panel already ships with voice controls, match tracking and live overlays. Use `npm test` to run the frontend test suite.
+
+## Automated tests
+
+- Backend: `cd backend && pytest`
+- Frontend: `cd frontend && npm test`
+
+The `.github/workflows/ci.yml` workflow runs both suites on every pull request.
 
 ## Contributing
 
