@@ -86,6 +86,14 @@ function App() {
   const [logs, setLogs] = useState([]);
   const [logsError, setLogsError] = useState(null);
   const [autoSendVoice, setAutoSendVoice] = useState(true);
+  const [activeSection, setActiveSection] = useState('command');
+
+  const sectionTabs = [
+    { id: 'command', label: 'Centro de mando', description: 'Vista general y accesos rápidos.' },
+    { id: 'tournaments', label: 'Torneos', description: 'Configura partidas competitivas.' },
+    { id: 'solo', label: 'Solo mode', description: 'Entrena y perfecciona tus listas.' },
+    { id: 'solo-ai', label: 'Solo vs IA', description: 'Practica con el asistente virtual.' },
+  ];
 
   const isLoggedIn = useMemo(() => authState.status === 'ready', [authState.status]);
 
@@ -718,6 +726,101 @@ function App() {
     </section>
   );
 
+  const renderNavigation = () => (
+    <nav className="section-tabs" aria-label="Modos principales">
+      {sectionTabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          className={tab.id === activeSection ? 'active' : ''}
+          onClick={() => setActiveSection(tab.id)}
+        >
+          <span className="tab-label">{tab.label}</span>
+          <span className="tab-description">{tab.description}</span>
+        </button>
+      ))}
+    </nav>
+  );
+
+  const renderCommandCenter = () => (
+    <>
+      <section>
+        <h2>Centro de mando</h2>
+        <p>
+          Todo lo esencial en un solo lugar: inicia sesión, configura tus herramientas preferidas y
+          revisa de un vistazo lo que puedes hacer con el asistente de Flames of War. Este panel está
+          pensado para comandantes que quieren resultados rápidos sin perderse en menús avanzados.
+        </p>
+        <ol>
+          <li>Accede con tu cuenta o crea una nueva en segundos.</li>
+          <li>Elige tus herramientas favoritas y guárdalas como referencia.</li>
+          <li>Vuelve cuando quieras para retomar tus partidas o preparar nuevas misiones.</li>
+        </ol>
+      </section>
+      {renderAuthSection()}
+      {renderToolLinks()}
+    </>
+  );
+
+  const renderTournaments = () => (
+    <>
+      <section>
+        <h2>Preparación para torneos</h2>
+        <p>
+          Organiza partidas competitivas con plantillas claras para escenarios, anotaciones y
+          replays. Usa estas herramientas para dejar todo registrado y compartirlo con tus compañeros
+          de equipo antes y después del evento.
+        </p>
+        <ul>
+          <li>Define el contexto del enfrentamiento con el Consejero de escenario.</li>
+          <li>Registra turnos clave y replays en la bitácora integrada.</li>
+          <li>Conserva todo en tu cuenta para consultar historiales cuando los necesites.</li>
+        </ul>
+      </section>
+      {renderScenarioSection()}
+      {renderLogSection()}
+    </>
+  );
+
+  const renderSoloMode = () => (
+    <>
+      <section>
+        <h2>Solo mode</h2>
+        <p>
+          Entrena sin presión, ajusta tus listas y recibe consejos personalizados para mejorar tus
+          maniobras. Está diseñado para jugadores que quieren experimentar con estrategias a su ritmo
+          y documentar aprendizajes clave.
+        </p>
+        <ul>
+          <li>Analiza tus listas y detecta sinergias con el Analizador de ejército.</li>
+          <li>Simula situaciones específicas y pide orientación al Entrenador táctico.</li>
+          <li>Combina ambos análisis para diseñar sesiones de práctica efectivas.</li>
+        </ul>
+      </section>
+      {renderArmySection()}
+      {renderCoachSection()}
+    </>
+  );
+
+  const renderSoloVsAI = () => (
+    <>
+      <section>
+        <h2>Solo vs IA</h2>
+        <p>
+          Conversa con el asistente táctico para simular órdenes, recibir contraataques sugeridos y
+          perfeccionar tus respuestas. Controla la experiencia con voz o texto y guarda los turnos
+          memorables para repasar después.
+        </p>
+        <ul>
+          <li>Describe la situación actual y deja que la IA responda al instante.</li>
+          <li>Activa la transcripción de voz para un flujo de juego más inmersivo.</li>
+          <li>Revisa el historial de turnos guardado automáticamente en la sección de torneos.</li>
+        </ul>
+      </section>
+      {renderChatSection()}
+    </>
+  );
+
   return (
     <div className="app-container">
       <header>
@@ -728,13 +831,14 @@ function App() {
         </p>
       </header>
 
-      {renderAuthSection()}
-      {renderToolLinks()}
-      {renderChatSection()}
-      {renderScenarioSection()}
-      {renderArmySection()}
-      {renderCoachSection()}
-      {renderLogSection()}
+      {renderNavigation()}
+
+      <main>
+        {activeSection === 'command' && renderCommandCenter()}
+        {activeSection === 'tournaments' && renderTournaments()}
+        {activeSection === 'solo' && renderSoloMode()}
+        {activeSection === 'solo-ai' && renderSoloVsAI()}
+      </main>
     </div>
   );
 }
