@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from models import User, db
+from models import PasswordValidationError
 
 from backend.models import User, db
 

@@ -128,6 +128,36 @@ El backend expone un conjunto de endpoints JSON para la gestión de usuarios y s
   - `401 Unauthorized`: token ausente o inválido (gestionado por JWT).
   - `404 Not Found`: el usuario referenciado por el token no existe.
 
+### Configuración de la base de datos
+
+El backend utiliza SQLite por defecto y crea un archivo `site.db` en el directorio `backend`. Puedes empezar con esta configuración sin realizar ningún cambio adicional. Para utilizar una base de datos distinta (por ejemplo, PostgreSQL o MySQL), establece la variable de entorno `DATABASE_URI` antes de iniciar la aplicación. Ejemplos:
+
+- PostgreSQL: `export DATABASE_URI=postgresql+psycopg2://usuario:password@localhost:5432/fow`
+- MySQL/MariaDB: `export DATABASE_URI=mysql+pymysql://usuario:password@localhost:3306/fow`
+
+También puedes definir `SECRET_KEY` y `JWT_SECRET_KEY` si deseas claves distintas a las predeterminadas.
+
+### Migraciones de base de datos
+
+El proyecto integra [Flask-Migrate](https://flask-migrate.readthedocs.io/) para administrar la evolución del esquema. Dentro del directorio `backend` encontrarás scripts que simplifican los comandos habituales:
+
+- `scripts/db_init.sh`: inicializa el directorio de migraciones (solo la primera vez).
+- `scripts/db_migrate.sh "Mensaje"`: genera una nueva migración con el mensaje indicado.
+- `scripts/db_upgrade.sh`: aplica las migraciones pendientes sobre la base de datos configurada.
+
+Todos los scripts asumen que se ejecutan desde cualquier ubicación y configuran automáticamente `FLASK_APP=app:create_app`.
+
+### Datos de prueba e inicialización automática
+
+Para crear usuarios de ejemplo y automatizar la inicialización del entorno ejecuta:
+
+```
+cd backend
+scripts/bootstrap.sh
+```
+
+El script `bootstrap.sh` aplica las migraciones y ejecuta `scripts/seed_users.py`, que crea usuarios de prueba (`test_user` y `streamer`) siempre que no existan. Si necesitas crear un usuario adicional durante el sembrado, define las variables `FIXTURE_CREATE_USER`, `FIXTURE_CREATE_EMAIL` y opcionalmente `FIXTURE_CREATE_PASSWORD` antes de ejecutar el script.
+
 ## Configurar el Frontend
 - `OPENAI_API_KEY`: clave de API (obligatoria para usar este proveedor).
 - `OPENAI_MODEL`: modelo a utilizar (por defecto `gpt-4o`).
