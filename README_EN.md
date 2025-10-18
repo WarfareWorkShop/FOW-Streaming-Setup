@@ -12,7 +12,7 @@ described in earlier drafts of the project.
 - **frontend/src/App.js**: Minimal React interface that sends text messages to the backend and renders the simulated reply.
 - **frontend/src/VoiceInteraction.js**: Browser speech-recognition demo (not wired into the main app yet).
 - **frontend/imageprocessing.py**: Standalone OpenCV script used to experiment with contour detection on static images.
-- **lanzadados*.md / .ino**: Hardware notes and prototypes for dice reading (not connected to the software stack).
+- **tools/lanzadados/***: Hardware notes and prototypes for dice reading (not connected to the software stack).
 
 ## Current functionality
 

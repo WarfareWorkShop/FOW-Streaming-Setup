@@ -13,7 +13,7 @@ futuras.
 - **frontend/src/App.js**: Interfaz React mínima para enviar mensajes de texto al backend.
 - **frontend/src/VoiceInteraction.js**: Ejemplo de transcripción de voz en el navegador (no integrado con el backend).
 - **frontend/imageprocessing.py**: Script independiente con utilidades de OpenCV para analizar imágenes estáticas.
-- **lanzadados*.md / .ino**: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
+- **tools/lanzadados/***: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
 
 ## Estado actual de las funcionalidades
 

@@ -12,9 +12,9 @@ Este proyecto es un programa para Arduino que controla un servomotor para lanzar
 
 ## Instalación
 
-1. Descarga el archivo `lanzadados.ino` de este repositorio.
+1. Descarga el archivo `lanzadados.ino` desde la carpeta `tools/lanzadados/` de este repositorio.
 2. Abre el IDE de Arduino.
-3. Ve a `Archivo` > `Abrir` y selecciona el archivo `lanzadados.ino`.
+3. Ve a `Archivo` > `Abrir` y selecciona el archivo `tools/lanzadados/lanzadados.ino`.
 4. Verifica que la placa y el puerto serial estén configurados correctamente en el IDE.
 5. Carga el programa en tu placa Arduino.
 
@@ -45,4 +45,4 @@ Si tienes alguna sugerencia o mejora, no dudes en abrir un issue o enviar un pul
 
 ## Licencia
 
-Este proyecto está licenciado bajo la licencia BSD-3-Clause. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está licenciado bajo la licencia BSD-3-Clause. Consulta el archivo [LICENSE](../LICENSE) para más detalles.

@@ -12,9 +12,9 @@ This project is an Arduino program that controls a servo motor to launch dice in
 
 ## Installation
 
-1. Download the `launched.ino` file from this repository.
+1. Download the `lanzadados.ino` file from the `tools/lanzadados/` folder in this repository.
 2. Open the Arduino IDE.
-3. Go to `File` > `Open` and select the `launched.ino` file.
+3. Go to `File` > `Open` and select the `tools/lanzadados/lanzadados.ino` file.
 4. Check that the board and serial port are configured correctly in the IDE.
 5. Upload the program to your Arduino board.
 
@@ -45,4 +45,4 @@ If you have any suggestions or improvements, feel free to open an issue or send 
 
 ## License
 
-This project is licensed under the BSD-3-Clause license. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the BSD-3-Clause license. See the [LICENSE](../LICENSE) file for more details.
