@@ -1,6 +1,7 @@
 # OBS Studio
 .obsproject
 *.json
+!frontend/package.json
 !translations/*.json
 !frontend/src/locales/*.json
 *.ini
