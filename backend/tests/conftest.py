@@ -16,6 +16,7 @@ os.environ.setdefault('SECRET_KEY', 'testing-secret')
 from backend.app import create_app
 from backend.config import Config
 from backend.extensions import db
+from backend.models import User
 
 
 class TestConfig(Config):
@@ -60,3 +61,15 @@ def auth_headers(client):
     return {
         'Authorization': f"Bearer {data['accessToken']}",
     }
+
+
+@pytest.fixture()
+def user_factory(app):
+    def _create_user(username: str, email: str, password: str = 'Sup3r$ecure1!') -> User:
+        user = User(username=username, email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    return _create_user
