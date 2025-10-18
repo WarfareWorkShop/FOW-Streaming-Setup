@@ -11,64 +11,14 @@ import {
   apiClient,
 } from './config';
 import { clearTokens, isAuthenticated, setTokens } from './auth';
-
-const extractErrorMessage = (error, fallback = 'Ocurrió un error inesperado.') => {
-  if (!error) {
-    return fallback;
-  }
-  const responseMessage = error?.response?.data?.message || error?.response?.data?.error;
-  if (typeof responseMessage === 'string' && responseMessage.trim()) {
-    return responseMessage;
-  }
-  if (error.message) {
-    return error.message;
-  }
-  return fallback;
-};
-
-const modeSettings = {
-  solo: {
-    label: 'Solo',
-    description: 'Planifica entrenamientos individuales sin oponentes humanos.',
-    playerSlots: 1,
-    min: 1,
-    max: 1,
-    opponentType: 'ai',
-  },
-  solo_ai: {
-    label: 'Solo vs IA',
-    description: 'Enfrentamientos rápidos contra la inteligencia artificial.',
-    playerSlots: 2,
-    min: 2,
-    max: 2,
-    opponentType: 'ai',
-  },
-  versus: {
-    label: 'Versus',
-    description: 'Partidas estándar entre 2 y 8 jugadores.',
-    playerSlots: 2,
-    min: 2,
-    max: 8,
-    opponentType: 'human',
-  },
-  tournament: {
-    label: 'Torneo',
-    description: 'Organiza brackets competitivos de hasta 10 jugadores.',
-    playerSlots: 8,
-    min: 4,
-    max: 10,
-    opponentType: 'human',
-  },
-};
-
-const initialMatchConfig = {
-  name: '',
-  scenario: '',
-  opponentType: 'ai',
-  mode: 'solo_ai',
-  playerSlots: modeSettings.solo_ai.playerSlots,
-  invitee: '',
-};
+import extractErrorMessage from './utils/errors';
+import {
+  buildMatchPayload,
+  createInitialMatchConfig,
+  modeSettings,
+  requiresInvitee,
+  updateConfigForMode,
+} from './utils/matches';
 
 const MatchGrid = ({ playerSlots, mode }) => {
   if (!playerSlots || playerSlots < 1) {
@@ -114,7 +64,7 @@ function App() {
   const [matches, setMatches] = useState([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [matchError, setMatchError] = useState(null);
-  const [matchConfig, setMatchConfig] = useState(initialMatchConfig);
+  const [matchConfig, setMatchConfig] = useState(createInitialMatchConfig());
 
   const [dicePreview, setDicePreview] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
@@ -271,17 +221,7 @@ function App() {
   };
 
   const updateMode = (mode) => {
-    const settings = modeSettings[mode];
-    if (!settings) {
-      return;
-    }
-
-    setMatchConfig((prev) => ({
-      ...prev,
-      mode,
-      opponentType: settings.opponentType,
-      playerSlots: settings.playerSlots,
-    }));
+    setMatchConfig((prev) => updateConfigForMode(prev, mode));
   };
 
   const handleModeChange = (event) => {
@@ -303,22 +243,12 @@ function App() {
       return;
     }
 
-    const payload = {
-      name: matchConfig.name.trim(),
-      scenario: matchConfig.scenario.trim() || undefined,
-      opponent_type: matchConfig.opponentType,
-      mode: matchConfig.mode,
-      player_slots: matchConfig.playerSlots,
-    };
-
-    if (matchConfig.opponentType === 'human' && matchConfig.invitee.trim()) {
-      payload.invitee_username = matchConfig.invitee.trim();
-    }
+    const payload = buildMatchPayload(matchConfig);
 
     try {
       const { data } = await apiClient.post(MATCHES_ENDPOINT, payload);
       setMatches((prev) => [data.match, ...prev]);
-      setMatchConfig({ ...initialMatchConfig });
+      setMatchConfig(createInitialMatchConfig());
       setFeedback('Partida creada correctamente.');
     } catch (error) {
       setMatchError(extractErrorMessage(error));
@@ -354,7 +284,7 @@ function App() {
   };
 
   const activeModeSettings = modeSettings[matchConfig.mode] ?? modeSettings.versus;
-  const requiresInvite = matchConfig.opponentType === 'human' && matchConfig.mode !== 'solo';
+  const requiresInvite = requiresInvitee(matchConfig);
 
   return (
     <div className="app-container">
