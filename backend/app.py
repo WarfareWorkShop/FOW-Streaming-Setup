@@ -26,7 +26,7 @@ def create_app(config_class=Config):
     @app.route('/api/chat', methods=['POST'])
     def chat():
         user_message = request.json.get('message')
-        # Aquí llamamos a la API de OpenAI y retornamos la respuesta.
+        # TODO: integrar con OpenAI y reemplazar la respuesta simulada.
         # response = openai.ChatCompletion.create(...)
         return jsonify({"response": "This is a placeholder response from the AI"})
 
