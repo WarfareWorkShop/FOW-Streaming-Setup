@@ -1,70 +1,71 @@
 # Flames of War Streaming Setup
-## Description
-This project provides a complete setup for streaming Flames of War matches using OBS Studio, video cameras and Mist Server. Here you will find guides, configurations and scripts needed to start streaming your matches, using free software and cheap hardware. The project is flexible and can be adapted to any configuration and quality of materials you have available. In a future phase the project will be completed including the methodology and components to be able to include a full AI opponent in wargames.
 
-## Initial Setup
-### Requirements
-- OBS Studio
-- VLC Media Player or Webcamoid
-- Sazao Camera (or any other camera without HDMI output and with USB output)
-- Microphone (optional)
-- Mist Server
+## Overview
 
-### Installation
-1. **OBS Studio:**
-- Download and install OBS Studio from [OBS Studio](https://obsproject.com/).
-2. **VLC Media Player:**
-- Download and install VLC from [VLC Media Player](https://www.videolan.org/vlc/).
-3. **Webcamoid:**
-- Download and install Webcamoid from [Webcamoid](https://webcamoid.github.io/).
-4. **Mist Server:**
-- Download and install Mist Server from [Mist Server](https://mistserver.org/).
+This repository gathers the different experiments and prototypes required to build a streaming system for Flames of War matches.
+The code currently provides only the building blocks for future iterations and does **not** implement the full experience
+described in earlier drafts of the project.
 
-### OBS Setup
-1. **Import Profiles and Scenes:**
-- Export your profile and scene settings from OBS and upload them to the repository.
-- In OBS, go to "Profile" > "Import" and select the exported file.
-- Repeat the process for scenes.
-2. **Add Sources:**
-- Add your cameras and adjust their positions in the OBS preview window.
-3. **Integrate Mist Server:**
-- Configure Mist Server so it can be used as a source in OBS.
-- Add Mist Server as a source in OBS and configure its settings as needed.
+## Project structure
 
-### Example setup
-- **PC 1:**
-- 2 2K USB cameras connected
-- One camera focused on the entire board
-- Another camera focused on the dice
-- Install and configure Mist Server on this PC
-- Open Mist Server and create a new "Capture Source"
-- Select the USB cameras as capture devices
-- Set the desired resolution and frame rate
-- Enable the "Stream this source" option
-- Note the IP address and port that Mist Server is using to stream
-- Stream the videos over the LAN using Mist Server
-- **PC 2:**
-- Install OBS Studio on this PC
-- In OBS, create a new scene
-- Add a "Media Source" for each camera
-- Select "Mist Network Source" as the source type
-- Enter the IP address and port of PC 1 that is streaming with Mist Server
-- Position and adjust the camera sources in the OBS scene
-- Set up audio (microphone, etc.) as needed
-- Set up streaming output to the desired platform (YouTube, Twitch, etc.)
-- Receive videos streamed over the LAN from PC 1
-- Stream to internet platforms (YouTube, Twitch, etc.) using OBS Studio
+- **backend/**: Flask application with user registration/login and a chat endpoint that returns a placeholder response.
+- **frontend/src/App.js**: Minimal React interface that sends text messages to the backend and renders the simulated reply.
+- **frontend/src/VoiceInteraction.js**: Browser speech-recognition demo (not wired into the main app yet).
+- **frontend/imageprocessing.py**: Standalone OpenCV script used to experiment with contour detection on static images.
+- **lanzadados*.md / .ino**: Hardware notes and prototypes for dice reading (not connected to the software stack).
 
-### Usage
-1. **Start Streaming:**
-- On PC 1, start streaming on Mist Server
-- On PC 2, set your stream key in OBS for the platform of your choice (YouTube, Twitch)
-- On PC 2, click "Start Streaming" in OBS to start streaming
-2. **Monitor the Stream:**
-- Use a secondary device to check the video and audio quality on the streaming platform
+## Current functionality
 
-## Contribute
-If you have improvements, suggestions, or find bugs, please open an issue or submit a pull request.
+### Implemented
+
+- User registration and login backed by SQLite with JWT issuance.
+- `/api/chat` endpoint that returns a mock response for frontend-backend integration tests.
+- Simple React UI to send a message and display the mocked response.
+- Voice recognition example using `webkitSpeechRecognition`.
+- Image-processing helper that detects contours and saves a processed image to disk.
+
+### TODO / Next steps
+
+- **Real OpenAI integration**: call the API, handle credentials securely and surface errors to the client.
+- **AI opponent gameplay**: define game flow, turn handling and persistence of match state.
+- **Real-time image processing**: connect `imageprocessing.py` to the backend to automate dice/result detection.
+- **End-to-end voice interaction**: wire `VoiceInteraction.js` into the API and support spoken responses.
+- **Streaming configuration (OBS + Mist Server)**: provide actual configuration files/scripts and automation steps.
+- **Advanced user & match management**: roles, invitations, matchmaking and session persistence.
+- **Automated testing & deployment**: add backend/frontend test suites and CI/CD pipelines.
+
+## Requirements
+
+- Python 3.10+
+- Node.js 18+
+- SQLite (bundled with Python) or any SQLAlchemy-compatible database.
+
+## Getting started
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+flask --app app run
+```
+
+> **TODO**: set environment variables for `SECRET_KEY`, `DATABASE_URI` and the OpenAI key once the real integration is in place.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+> **TODO**: extend the React app to include voice controls, match state management and visual overlays.
+
+## Contributing
+
+Contributions are welcome! Please open an issue to discuss your idea or submit a pull request with concrete improvements.
 
 ## License
+
 This project is licensed under the BSD-3-Clause License. See the `LICENSE` file for details.
