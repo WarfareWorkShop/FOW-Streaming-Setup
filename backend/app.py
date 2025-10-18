@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-from flask_jwt_extended import verify_jwt_in_request
+from flask_jwt_extended import jwt_required, verify_jwt_in_request
 
 from backend.ai_clients import (
     AIProviderError,
@@ -10,7 +10,9 @@ from backend.ai_clients import (
     generate_ai_response,
 )
 from backend.config import Config
+from backend.dice_service import DiceProcessingError, analyse_dice_image
 from backend.extensions import bcrypt, db, jwt, limiter, migrate
+from backend.game_routes import game_bp
 from backend.models import TokenBlocklist
 from backend.routes import auth_bp
 from backend.tactics import tactics_bp
@@ -96,6 +98,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(tactics_bp, url_prefix="/api/tactics")
+    app.register_blueprint(game_bp, url_prefix="/api")
 
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(_jwt_header, jwt_payload):  # pragma: no cover - simple query
@@ -120,7 +123,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
             return True
 
         identity = jwt_payload.get("sub")
-        user = User.query.get(int(identity)) if identity is not None else None
+        user = db.session.get(User, int(identity)) if identity is not None else None
         if not user or not user.last_password_change:
             return False
 
@@ -132,7 +135,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     def add_password_timestamp(identity):  # pragma: no cover - simple serialization
         from backend.models import User
 
-        user = User.query.get(int(identity)) if identity is not None else None
+        user = db.session.get(User, int(identity)) if identity is not None else None
         if not user or not user.last_password_change:
             return {}
         timestamp = user.last_password_change.isoformat()
