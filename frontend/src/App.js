@@ -1,133 +1,74 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import './App.css';
+
+import VoiceInteraction from './VoiceInteraction';
+import { CHAT_ENDPOINT, apiClient } from './config';
 
 function App() {
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const sendMessage = async () => {
-    if (!message.trim()) {
+  const sendMessage = async (messageToSend = message) => {
+    const trimmedMessage = messageToSend.trim();
+
+    if (!trimmedMessage) {
+      setError('Por favor ingresa un mensaje antes de enviar.');
       return;
     }
 
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const res = await axios.post('http://localhost:5000/api/chat', { message });
-      setResponse(res.data.response);
+      const res = await apiClient.post(CHAT_ENDPOINT, { message: trimmedMessage });
+      setResponse(res?.data?.response ?? '');
       setMessage('');
-    } catch (error) {
-      console.error(error);
-      setResponse('⚠️ Unable to reach the tactical AI. Confirm the command server is running.');
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo enviar el mensaje. Inténtalo nuevamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleVoiceTranscript = (transcript) => {
+    if (!transcript || !transcript.trim()) {
+      return;
+    }
+
+    setMessage(transcript);
+    sendMessage(transcript);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    sendMessage();
+  };
+
   return (
-    <div className="app">
-      <div className="background-flare" />
-
-      <header className="hero">
-        <span className="badge">Live battle briefing</span>
-        <h1>Flames of War Command Center</h1>
-        <p>
-          Deploy an immersive stream overlay for your Flames of War broadcasts. Track both
-          commanders, highlight decisive maneuvers, and narrate the frontline with AI-driven
-          insights.
+    <div>
+      <h1>Flames of War - AI Opponent</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Escribe tu mensaje..."
+          aria-label="mensaje"
+        />
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Enviando...' : 'Enviar'}
+        </button>
+      </form>
+      {isLoading && <p role="status">Enviando mensaje...</p>}
+      {error && (
+        <p role="alert" style={{ color: 'red' }}>
+          {error}
         </p>
-        <div className="hero-actions">
-          <button type="button">Start broadcast layout</button>
-          <button type="button" className="secondary">Download overlay pack</button>
-        </div>
-      </header>
-
-      <main className="dashboard">
-        <section className="card">
-          <h2>Battle overview</h2>
-          <div className="grid-two-column">
-            <div className="stat-pill">
-              <span className="label">Scenario</span>
-              <span className="value">Breakthrough Assault</span>
-            </div>
-            <div className="stat-pill">
-              <span className="label">Round</span>
-              <span className="value">Turn 3 / 8</span>
-            </div>
-            <div className="stat-pill">
-              <span className="label">Weather</span>
-              <span className="value">Overcast, Muddy Fields</span>
-            </div>
-            <div className="stat-pill">
-              <span className="label">Intel Feed</span>
-              <span className="value">Recon Planes Active</span>
-            </div>
-          </div>
-          <h3>Timeline cues</h3>
-          <div className="timeline">
-            <div className="timeline-item">
-              Axis Panzers cross the river under smoke cover. Prepare slow-motion replay.
-            </div>
-            <div className="timeline-item">
-              Allied artillery zeroes in on objective Bravo. Queue lower-third graphic.
-            </div>
-            <div className="timeline-item">
-              Close-up on infantry assault. Trigger dramatic score stinger.
-            </div>
-          </div>
-        </section>
-
-        <section className="card">
-          <h2>Commanders &amp; scores</h2>
-          <div className="team-status">
-            <div className="team-row">
-              <div className="team-name">
-                <span>Allied forces</span>
-                <strong>Task Force Liberty</strong>
-              </div>
-              <div className="team-score">12</div>
-            </div>
-            <div className="team-row">
-              <div className="team-name">
-                <span>Axis forces</span>
-                <strong>9th Panzergruppe</strong>
-              </div>
-              <div className="team-score">9</div>
-            </div>
-          </div>
-
-          <div className="objectives">
-            <div className="objective-row">
-              <span>Objective Alpha</span>
-              <span className="status success">Secured</span>
-            </div>
-            <div className="objective-row">
-              <span>Objective Bravo</span>
-              <span className="status danger">Contested</span>
-            </div>
-            <div className="objective-row">
-              <span>Objective Charlie</span>
-              <span className="status">Pending</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="card">
-          <h2>AI control room</h2>
-          <div className="control-room">
-            <label htmlFor="message">Send tactical prompt</label>
-            <textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Request battlefield narration, camera cues, or strategic insights..."
-              rows={4}
-            />
-            <button type="button" onClick={sendMessage}>Deploy command</button>
-            <div className="response-panel">
-              <strong>AI Response</strong>
-              <div>{response || 'Awaiting your command...'}</div>
-            </div>
-          </div>
-        </section>
-      </main>
+      )}
+      <p>Respuesta: {response || 'Aún no hay respuesta.'}</p>
+      <VoiceInteraction onTranscript={handleVoiceTranscript} />
     </div>
   );
 }
