@@ -5,7 +5,11 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+try:  # pragma: no cover - optional dependency during tests
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover
+    def load_dotenv(*_args, **_kwargs):  # type: ignore[override]
+        return False
 
 # Load variables defined in a local .env file, if present.
 load_dotenv()

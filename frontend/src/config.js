@@ -32,6 +32,13 @@ const parsedTimeout = Number.parseInt(rawTimeout ?? '', 10);
 const API_TIMEOUT = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 10000;
 
 export const CHAT_ENDPOINT = '/api/chat';
+export const MATCHES_ENDPOINT = '/api/matches';
+export const DICE_SCAN_ENDPOINT = '/api/dice/scan';
+export const AUTH_ENDPOINTS = {
+  register: '/api/auth/register',
+  login: '/api/auth/login',
+  me: '/api/auth/me',
+};
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL.replace(/\/$/, ''),
@@ -40,5 +47,13 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export const setAuthToken = (token) => {
+  if (!token) {
+    delete apiClient.defaults.headers.common.Authorization;
+    return;
+  }
+  apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
+};
 
 export default API_BASE_URL;

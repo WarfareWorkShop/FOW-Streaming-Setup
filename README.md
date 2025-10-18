@@ -8,31 +8,25 @@ futuras.
 
 ## Estructura del proyecto
 
-- **backend/**: Aplicación Flask con registro, inicio de sesión y un endpoint de chat con integración con OpenAI, Anthropic y un
-  modelo local compatible con LM Studio.
-- **frontend/src/App.js**: Interfaz React mínima para enviar mensajes de texto al backend.
-- **frontend/src/VoiceInteraction.js**: Ejemplo de transcripción de voz en el navegador (no integrado con el backend).
-- **frontend/imageprocessing.py**: Script independiente con utilidades de OpenCV para analizar imágenes estáticas.
-- **tools/lanzadados/***: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
+- **backend/**: Aplicación Flask con registro, inicio de sesión, gestión avanzada de partidas, detección de dados e integración con proveedores de IA (OpenAI, Anthropic y LM Studio).
+- **frontend/src/App.js**: Panel React que centraliza autenticación, enfrentamientos contra la IA, detección de dados y chat táctico.
+- **frontend/src/VoiceInteraction.js**: Componente de transcripción en vivo integrado con el panel principal.
+- **backend/dice_service.py**: Servicio responsable de analizar imágenes y generar superposiciones para dados.
+- **tools/streaming/***: Configuraciones de OBS/MistServer y scripts de despliegue para reproducir la infraestructura de streaming.
+- **tools/lanzadados/***: Documentación y prototipos de hardware para lectura de dados.
 
 ## Estado actual de las funcionalidades
 
-### Implementado
+### Funcionalidades destacadas
 
-- Registro e inicio de sesión con almacenamiento en SQLite y emisión de JWT.
-- Endpoint `/api/chat` capaz de delegar en OpenAI, Anthropic o un endpoint local de LM Studio en función de la configuración.
-- Interfaz React para enviar mensajes al endpoint de chat y visualizar las respuestas.
-- Ejemplo de reconocimiento de voz en el navegador mediante `webkitSpeechRecognition`.
-- Script de procesamiento de imágenes con OpenCV que detecta contornos y genera una imagen de salida.
-
-### TODO / Próximos pasos
-
-- **IA como oponente**: definir lógica de juego, almacenamiento de estado y comunicación de turnos.
-- **Procesamiento de imagen en tiempo real**: integrar `imageprocessing.py` con el backend para automatizar la lectura de dados.
-- **Interacción por voz end-to-end**: conectar `VoiceInteraction.js` con la API y habilitar respuestas habladas.
-- **Configuración y automatización de streaming**: documentar perfiles reales de OBS/Mist Server y proveer scripts de despliegue.
-- **Gestión avanzada de usuarios y partidas**: roles, invitaciones, emparejamiento y persistencia de sesiones.
-- **Pruebas automatizadas**: añadir suites de tests para backend y frontend, así como pipelines de CI/CD.
+- Registro, inicio de sesión y emisión de JWT con roles de usuario y validación reforzada de contraseñas.
+- API de partidas con lógica de enfrentamientos contra IA, invitaciones entre jugadores y registro de eventos.
+- Procesamiento de imagen integrado para detectar impactos en dados y generar vistas previas listas para superposición.
+- Interacción por voz end-to-end: transcripción en el navegador, envío automático de acciones y respuestas habladas mediante Speech Synthesis.
+- Chat táctico multicanal con soporte para OpenAI, Anthropic y modelos servidos desde LM Studio.
+- Panel de control React con gestión de estado de la partida, historial de combate y herramientas auxiliares.
+- Configuraciones listas para usar de OBS/MistServer y script de automatización para reproducir la infraestructura de streaming.
+- Suites de pruebas de backend y frontend y workflow de GitHub Actions para la ejecución continua.
 
 ## Requisitos
 
@@ -217,6 +211,13 @@ cd frontend
 npm install
 npm start
 ```
+
+## Pruebas automatizadas
+
+- Backend: `cd backend && pytest`
+- Frontend: `cd frontend && npm test`
+
+El workflow `.github/workflows/ci.yml` ejecuta ambas suites en cada pull request.
 
 ## Contribuir
 

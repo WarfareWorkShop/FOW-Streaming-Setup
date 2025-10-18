@@ -72,7 +72,12 @@ def login():
 @jwt_required()
 def me():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    try:
+        user_id_int = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"message": "Invalid token payload."}), 401
+
+    user = db.session.get(User, user_id_int)
 
     if not user:
         return jsonify({"message": "User not found."}), 404
