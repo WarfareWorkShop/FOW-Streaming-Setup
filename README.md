@@ -48,17 +48,96 @@ El backend puede conectarse a tres proveedores distintos. Configura las variable
 - `DEFAULT_AI_PROVIDER`: `openai`, `anthropic` o `lmstudio` (por defecto `openai`).
 - `AI_REQUEST_TIMEOUT`: tiempo máximo en segundos para esperar la respuesta (por defecto `30`).
 
-### OpenAI
+### Endpoints de Autenticación
 
+El backend expone un conjunto de endpoints JSON para la gestión de usuarios y sesiones. Todos devuelven respuestas en formato `application/json`.
+
+#### `POST /register`
+
+- **Payload**
+
+  ```json
+  {
+    "username": "usuario",
+    "password": "contraseña"
+  }
+  ```
+
+- **Respuestas**
+  - `201 Created`: registro exitoso.
+    ```json
+    {"message": "User registered successfully!"}
+    ```
+  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
+    ```json
+    {"message": "Username and password are required."}
+    ```
+    ```json
+    {"message": "Username and password cannot be empty."}
+    ```
+  - `409 Conflict`: el nombre de usuario ya existe.
+    ```json
+    {"message": "Username is already taken."}
+    ```
+  - `500 Internal Server Error`: error al crear el usuario.
+    ```json
+    {"message": "Could not register user. Please try again later."}
+    ```
+
+#### `POST /login`
+
+- **Payload**
+
+  ```json
+  {
+    "username": "usuario",
+    "password": "contraseña"
+  }
+  ```
+
+- **Respuestas**
+  - `200 OK`: credenciales válidas, devuelve token JWT.
+    ```json
+    {"token": "<jwt>"}
+    ```
+  - `400 Bad Request`: falta `username`/`password`, son inválidos o están vacíos.
+    ```json
+    {"message": "Username and password are required."}
+    ```
+    ```json
+    {"message": "Username and password cannot be empty."}
+    ```
+  - `401 Unauthorized`: credenciales inválidas.
+    ```json
+    {"message": "Invalid credentials!"}
+    ```
+
+#### `GET /me`
+
+- **Headers**
+  - `Authorization: Bearer <jwt>`
+
+- **Respuestas**
+  - `200 OK`: devuelve la información del usuario autenticado.
+    ```json
+    {
+      "id": 1,
+      "username": "usuario"
+    }
+    ```
+  - `401 Unauthorized`: token ausente o inválido (gestionado por JWT).
+  - `404 Not Found`: el usuario referenciado por el token no existe.
+
+## Configurar el Frontend
 - `OPENAI_API_KEY`: clave de API (obligatoria para usar este proveedor).
-- `OPENAI_MODEL`: modelo a utilizar (por defecto `gpt-3.5-turbo`).
+- `OPENAI_MODEL`: modelo a utilizar (por defecto `gpt-4o`).
 - `OPENAI_BASE_URL`: URL base de la API (por defecto `https://api.openai.com/v1`).
 - `OPENAI_TEMPERATURE`: temperatura para la generación (por defecto `0.7`).
 
 ### Anthropic
 
 - `ANTHROPIC_API_KEY`: clave de API (obligatoria para usar este proveedor).
-- `ANTHROPIC_MODEL`: modelo a utilizar (por defecto `claude-3-haiku-20240307`).
+- `ANTHROPIC_MODEL`: modelo a utilizar (por defecto `claude-3.7-Sonnet`).
 - `ANTHROPIC_BASE_URL`: URL base de la API (por defecto `https://api.anthropic.com`).
 - `ANTHROPIC_API_VERSION`: versión de la API (por defecto `2023-06-01`).
 - `ANTHROPIC_MAX_TOKENS`: tokens máximos por respuesta (por defecto `1024`).
