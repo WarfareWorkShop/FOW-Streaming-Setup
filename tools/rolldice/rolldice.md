@@ -12,9 +12,9 @@ Este proyecto es un programa para Arduino que controla un servomotor para lanzar
 
 ## Instalación
 
-1. Descarga el archivo `lanzadados.ino` desde la carpeta `tools/lanzadados/` de este repositorio.
+1. Descarga el archivo `rolldice.ino` desde la carpeta `tools/rolldice/` de este repositorio.
 2. Abre el IDE de Arduino.
-3. Ve a `Archivo` > `Abrir` y selecciona el archivo `tools/lanzadados/lanzadados.ino`.
+3. Ve a `Archivo` > `Abrir` y selecciona el archivo `tools/rolldice/rolldice.ino`.
 4. Verifica que la placa y el puerto serial estén configurados correctamente en el IDE.
 5. Carga el programa en tu placa Arduino.
 

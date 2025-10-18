@@ -14,7 +14,7 @@ futuras.
 - **frontend/imageprocessing.py**: Script independiente con utilidades de OpenCV para analizar imágenes estáticas.
 - **launcher.py**: Lanzador interactivo para instalar dependencias y arrancar los servidores.
 - **configurator.py**: Asistente para crear o actualizar el archivo `.env` del proyecto.
-- **tools/lanzadados/***: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
+- **tools/rolldice/***: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
 
 ## Estado actual de las funcionalidades
 
