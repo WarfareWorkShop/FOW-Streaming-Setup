@@ -180,6 +180,26 @@ El script `bootstrap.sh` aplica las migraciones y ejecuta `scripts/seed_users.py
 
 ## Puesta en marcha
 
+### Launcher interactivo
+
+Para simplificar los primeros pasos puedes utilizar el script `launcher.py` situado
+en la raíz del repositorio. Solo necesitas tener Python 3.10+ instalado:
+
+```bash
+python launcher.py
+```
+
+El lanzador mostrará un menú en castellano desde el que podrás:
+
+- Instalar las dependencias del backend (`pip install -r backend/requirements.txt`).
+- Instalar las dependencias del frontend (`npm install`).
+- Ejecutar el servidor de Flask del backend.
+- Ejecutar el servidor de desarrollo de React.
+- Consultar un resumen rápido del entorno y las herramientas detectadas.
+
+Cada opción explica cómo detener el proceso (normalmente con `Ctrl+C`) para
+volver al menú principal.
+
 ### Backend
 
 ```bash
