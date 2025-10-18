@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+import { attachInterceptors } from './auth';
+
 const getEnv = (name) =>
   typeof process !== 'undefined' && process.env ? process.env[name] : undefined;
 
@@ -25,7 +27,7 @@ const fallbackBaseUrl = (() => {
   return undefined;
 })();
 
-const API_BASE_URL = envBaseUrl || fallbackBaseUrl || 'https://localhost:5000';
+const API_BASE_URL = envBaseUrl || fallbackBaseUrl || 'http://localhost:5000';
 
 const rawTimeout = getEnv('REACT_APP_API_TIMEOUT');
 const parsedTimeout = Number.parseInt(rawTimeout ?? '', 10);
@@ -48,12 +50,6 @@ export const apiClient = axios.create({
   },
 });
 
-export const setAuthToken = (token) => {
-  if (!token) {
-    delete apiClient.defaults.headers.common.Authorization;
-    return;
-  }
-  apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
-};
+attachInterceptors(apiClient);
 
 export default API_BASE_URL;

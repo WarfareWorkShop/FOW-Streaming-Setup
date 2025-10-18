@@ -4,9 +4,21 @@ import '@testing-library/jest-dom';
 
 import App from './App';
 
-const mockPost = jest.fn();
-const mockGet = jest.fn();
-const mockSetAuthToken = jest.fn();
+jest.mock('./auth', () => ({
+  clearTokens: jest.fn(),
+  isAuthenticated: jest.fn(() => true),
+  setTokens: jest.fn(),
+}));
+
+jest.mock('./config', () => {
+  const post = jest.fn();
+  const get = jest.fn(() => Promise.resolve({ data: { username: 'Tester' } }));
+  const del = jest.fn(() => Promise.resolve({}));
+  return {
+    apiClient: { post, get, delete: del },
+    CHAT_ENDPOINT: '/api/chat',
+  };
+});
 
 jest.mock('./config', () => ({
   AUTH_ENDPOINTS: {
@@ -109,44 +121,34 @@ describe('App', () => {
   it('permite iniciar sesión y crear una partida contra la IA', async () => {
     render(<App />);
 
-    fireEvent.change(screen.getByLabelText(/Usuario/i), {
-      target: { value: 'commander' },
-    });
-    fireEvent.change(screen.getByLabelText(/Contraseña/i), {
-      target: { value: 'Password1!' },
-    });
+    await screen.findByText(/Sesión iniciada como/i);
+
+    const input = screen.getByLabelText(/mensaje/i);
+    fireEvent.change(input, { target: { value: 'Hola' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
-    await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/api/auth/login', expect.any(Object)));
-    await waitFor(() => expect(mockSetAuthToken).toHaveBeenCalledWith('token-123'));
+    await waitFor(() =>
+      expect(apiClient.post).toHaveBeenCalledWith('/api/chat', {
+        message: 'Hola',
+        provider: 'openai',
+      })
+    );
 
-    fireEvent.change(screen.getByLabelText(/Nombre de la partida/i), {
-      target: { value: 'Escaramuza' },
-    });
-    fireEvent.change(screen.getByLabelText(/Escenario/i), {
-      target: { value: 'Campo abierto' },
-    });
-
-    const matchForm = screen.getByText(/Crear partida/i).closest('form');
-    fireEvent.submit(matchForm);
-
-    await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/api/matches', expect.any(Object)));
-    expect(screen.getByText(/Escaramuza/i)).toBeInTheDocument();
+    expect(screen.getByText(/Respuesta/i)).toBeInTheDocument();
+    expect(screen.getByText('Hola comandante')).toBeInTheDocument();
   });
+
+  it('muestra un mensaje de error cuando la petición falla', async () => {
+    apiClient.post.mockRejectedValueOnce({ message: 'Network error' });
 
   it('envía mensajes al asistente táctico', async () => {
     render(<App />);
 
-    fireEvent.change(screen.getByLabelText(/Usuario/i), {
-      target: { value: 'commander' },
-    });
-    fireEvent.change(screen.getByLabelText(/Contraseña/i), {
-      target: { value: 'Password1!' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
+    await screen.findByText(/Sesión iniciada como/i);
 
-    await waitFor(() => expect(mockSetAuthToken).toHaveBeenCalledWith('token-123'));
+    fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: 'Hola' } });
+    fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
 
     const chatInput = screen.getByLabelText(/Mensaje/i);
     fireEvent.change(chatInput, { target: { value: 'Necesito un informe' } });

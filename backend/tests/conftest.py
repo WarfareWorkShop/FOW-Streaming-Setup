@@ -3,30 +3,33 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Generator
-
-os.environ.setdefault("SECRET_KEY", "testing-secret-key")
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 import pytest
 
+ROOT_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = ROOT_DIR.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+os.environ.setdefault('SECRET_KEY', 'testing-secret')
+
 from backend.app import create_app
 from backend.config import Config
-from backend.models import User, db
+from backend.extensions import db
 
 
-class TestConfig(Config):  # type: ignore[misc]
+class TestConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    OPENAI_API_KEY = "test"
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SECRET_KEY = 'testing-secret'
+    WTF_CSRF_ENABLED = False
+    REQUIRE_AUTH_FOR_CHAT = True
+    RATELIMIT_ENABLED = False
+    GLOBAL_RATE_LIMITS = []
 
 
-@pytest.fixture
-def app() -> Generator:
+@pytest.fixture()
+def app():
     app = create_app(TestConfig)
     with app.app_context():
         db.create_all()
@@ -35,18 +38,25 @@ def app() -> Generator:
         db.drop_all()
 
 
-@pytest.fixture
+@pytest.fixture()
 def client(app):
     return app.test_client()
 
 
-@pytest.fixture
-def user_factory(app):
-    def _factory(username: str, email: str) -> User:
-        user = User(username=username, email=email)
-        user.set_password("Password1!")
-        db.session.add(user)
-        db.session.commit()
-        return user
+@pytest.fixture()
+def auth_headers(client):
+    registration_payload = {
+        'username': 'commander',
+        'email': 'commander@example.com',
+        'password': 'Sup3r$ecure',
+    }
+    client.post('/api/auth/register', json=registration_payload)
 
-    yield _factory
+    response = client.post(
+        '/api/auth/login',
+        json={'username': registration_payload['username'], 'password': registration_payload['password']},
+    )
+    data = response.get_json()
+    return {
+        'Authorization': f"Bearer {data['accessToken']}",
+    }

@@ -8,12 +8,13 @@ described in earlier drafts of the project.
 
 ## Project structure
 
-- **backend/**: Flask application with authentication, advanced match management, dice processing and integrations with OpenAI, Anthropic and LM Studio.
-- **frontend/src/App.js**: Control panel that centralises authentication, AI matches, dice scanning and tactical chat.
-- **frontend/src/VoiceInteraction.js**: Live speech recognition component fully wired into the main UI.
-- **backend/dice_service.py**: Service that processes dice images and produces overlays.
-- **tools/streaming/***: Ready-to-use OBS/MistServer configuration files and deployment scripts.
-- **tools/lanzadados/***: Hardware notes and prototypes for dice readers.
+- **backend/**: Flask application with user registration/login and a chat endpoint that returns a placeholder response.
+- **frontend/src/App.js**: Minimal React interface that sends text messages to the backend and renders the simulated reply.
+- **frontend/src/VoiceInteraction.js**: Browser speech-recognition demo (not wired into the main app yet).
+- **frontend/imageprocessing.py**: Standalone OpenCV script used to experiment with contour detection on static images.
+- **launcher.py**: Interactive launcher to install dependencies and start the servers.
+- **configurator.py**: Helper that creates or updates the project's `.env` file.
+- **tools/lanzadados/***: Hardware notes and prototypes for dice reading (not connected to the software stack).
 
 ## Current functionality
 
@@ -49,6 +50,10 @@ Set the following environment variables before launching Flask (a `.env` file is
 - `SECRET_KEY`: secret used by Flask and JWT.
 - `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `LM_STUDIO_BASE_URL` depending on the provider you plan to use.
 - `DATABASE_URI` if you want to replace the default SQLite database.
+
+### Interactive helpers
+
+Run `python launcher.py` from the repository root for a guided experience. The menu lets you install backend/frontend dependencies, start the servers and open the configuration assistant. The latter triggers `configurator.py`, which walks you through generating a `.env` file with all the required variables (secret keys, AI providers, etc.). When a previous `.env` is found the tool automatically creates a backup before overwriting it.
 
 ### Frontend
 
