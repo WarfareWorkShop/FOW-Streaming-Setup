@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import User, db
+
+from backend.models import User, db
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -12,6 +14,7 @@ def register():
     db.session.commit()
     return jsonify({"message": "User registered successfully!"})
 
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -20,4 +23,3 @@ def login():
         token = user.get_token()
         return jsonify({"token": token})
     return jsonify({"message": "Invalid credentials!"}), 401
-
