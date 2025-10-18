@@ -2,3 +2,5 @@
 .obsproject
 *.json
 *.ini
+*.db
+backend/instance/

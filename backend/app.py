@@ -26,75 +26,95 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for environments sin 
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 
 from config import Config
-from chat_service import (
-    MessageValidationError,
-    OpenAIServiceError,
-    UnexpectedAIServiceError,
-    generate_ai_reply,
-    validate_prompt,
+from models import bcrypt, db
+from routes import auth_bp
+
+migrate = Migrate()
+jwt = JWTManager()
+
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    CORS(app)  # Habilitar CORS para permitir peticiones desde el frontend
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    @app.route('/api/chat', methods=['POST'])
+    def chat():
+        user_message = request.json.get('message')
+        # Aquí llamamos a la API de OpenAI y retornamos la respuesta.
+        # response = openai.ChatCompletion.create(...)
+        return jsonify({"response": "This is a placeholder response from the AI"})
+
+    return app
+
+
+app = create_app()
+
+from backend.ai_clients import (
+    AIProviderError,
+    MissingConfigurationError,
+    generate_ai_response,
 )
+from backend.config import Config
+from backend.models import db, bcrypt
+from backend.routes import auth_bp
 
-app = Flask(__name__)
-app.config.from_object(Config)
-CORS(app)  # Habilitar CORS para permitir peticiones desde el frontend
-jwt = JWTManager(app)
+jwt = JWTManager()
 
-if app.config.get("OPENAI_API_KEY"):
-    openai.api_key = app.config["OPENAI_API_KEY"]
-else:
-    logging.warning(
-        "OPENAI_API_KEY is not configured. The /api/chat endpoint will not be able to "
-        "contact OpenAI."
-    )
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
 
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    if not request.is_json:
-        return (
-            jsonify({"error": "Solicitud inválida. Se esperaba un cuerpo JSON."}),
-            400,
-        )
+    CORS(app)
 
-    user_message = request.json.get('message')
+    db.init_app(app)
+    bcrypt.init_app(app)
+    jwt.init_app(app)
 
-    try:
-        sanitized_message = validate_prompt(
-            user_message, app.config.get("PROMPT_MAX_CHARS", 2000)
-        )
-    except MessageValidationError as exc:
-        return jsonify({"error": str(exc)}), 400
+    @app.route("/")
+    def index():
+        return render_template("index.html")
 
-    if not app.config.get("OPENAI_API_KEY"):
-        return (
-            jsonify({"error": "Servicio de IA no configurado. Contacta al administrador."}),
-            500,
-        )
+    @app.route("/api/chat", methods=["POST"])
+    def chat():
+        data = request.get_json() or {}
+        user_message = data.get("message", "").strip()
+        provider = data.get("provider") or app.config["DEFAULT_AI_PROVIDER"]
 
-    try:
-        ai_message = generate_ai_reply(
-            openai,
-            OpenAIError,
-            user_message=sanitized_message,
-            settings=app.config,
-        )
-    except OpenAIServiceError as exc:
-        logging.exception("OpenAI API error: %s", exc)
-        payload = {"error": exc.user_message}
-        if exc.detail:
-            payload["detalle"] = exc.detail
-        return jsonify(payload), 502
-    except UnexpectedAIServiceError as exc:
-        logging.exception("Unexpected OpenAI error: %s", exc)
-        return jsonify({"error": exc.user_message}), 500
+        if not user_message:
+            return jsonify({"error": "Message is required"}), 400
 
-    return jsonify({"response": ai_message})
+        try:
+            ai_response = generate_ai_response(user_message, provider, app.config)
+        except MissingConfigurationError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except AIProviderError as exc:
+            app.logger.exception("AI provider error")
+            return jsonify({"error": str(exc)}), 502
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        return jsonify({"response": ai_response, "provider": provider})
 
+    app.register_blueprint(auth_bp)
+
+    return app
+
+
+if __name__ == "__main__":
+    application = create_app()
+    application.run(debug=True)
