@@ -4,7 +4,10 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from models import User, db
 
+from backend.models import User, db
+
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -36,6 +39,7 @@ def register():
         return jsonify({"message": "Could not register user. Please try again later."}), 500
 
     return jsonify({"message": "User registered successfully!"}), 201
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
