@@ -18,6 +18,7 @@ from flask_jwt_extended import (
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from backend.extensions import limiter
+from backend.i18n import translate
 from backend.models import PasswordValidationError, TokenBlocklist, User, db
 
 auth_bp = Blueprint("auth", __name__)
@@ -59,6 +60,10 @@ def _register_failure(key: str) -> None:
     threshold_time = now - timedelta(seconds=window_seconds)
     while failures and failures[0] < threshold_time:
         failures.popleft()
+
+    if not failures:
+        _FAILED_LOGINS.pop(key, None)
+        return
 
     if len(failures) >= threshold:
         _ACCOUNT_LOCKS[key] = now + timedelta(seconds=duration)

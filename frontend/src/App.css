@@ -148,6 +148,167 @@ ul {
   padding-left: 1.25rem;
 }
 
+.status-message,
+.error-message {
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-message {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #34d399;
+}
+
+.error-message {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.auth-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-toggle {
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+}
+
+.auth-toggle button {
+  background: transparent;
+  color: #1f2937;
+  border-radius: 999px;
+  padding: 0.5rem 1.5rem;
+}
+
+.auth-toggle button.active {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #fff;
+}
+
+.profile-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(251, 146, 60, 0.16));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.match-grid__slot {
+  border-radius: 12px;
+  border: 1px dashed #cbd5f5;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  background: #f9fafb;
+}
+
+.field-hint {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.match-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.match-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.match-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.match-card__badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1f2937;
+  background: #fde68a;
+}
+
+.match-card__badge--solo,
+.match-card__badge--solo_ai {
+  background: #bfdbfe;
+}
+
+.match-card__badge--tournament {
+  background: #fecaca;
+}
+
+.chat-log {
+  margin-top: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.chat-log__entry {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-log__entry--assistant {
+  color: #1d4ed8;
+}
+
+.chat-log__entry--user {
+  color: #111827;
+}
+
+.dice-results {
+  margin-top: 1rem;
+  background: #f3f4f6;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.dice-preview {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.dice-preview img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
 @media (max-width: 640px) {
   .app-container {
     padding: 1.5rem 1rem 3rem;

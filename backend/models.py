@@ -137,6 +137,8 @@ class Match(db.Model):
     scenario = db.Column(db.String(120), nullable=True)
     host_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     opponent_type = db.Column(db.String(20), nullable=False, default="ai")
+    mode = db.Column(db.String(20), nullable=False, default="versus")
+    player_slots = db.Column(db.Integer, nullable=False, default=2)
     status = db.Column(db.Enum(MatchStatus), nullable=False, default=MatchStatus.PENDING)
     current_turn = db.Column(db.String(20), nullable=False, default="player")
     state = db.Column(db.JSON, nullable=False, default=dict)
@@ -168,6 +170,8 @@ class Match(db.Model):
             "name": self.name,
             "scenario": self.scenario,
             "opponent_type": self.opponent_type,
+            "mode": self.mode,
+            "player_slots": self.player_slots,
             "status": self.status.value if isinstance(self.status, MatchStatus) else self.status,
             "current_turn": self.current_turn,
             "created_at": self.created_at.isoformat() if self.created_at else None,

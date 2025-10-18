@@ -15,6 +15,7 @@ from backend.config import Config
 from backend.dice_service import DiceProcessingError, analyse_dice_image
 from backend.extensions import bcrypt, db, jwt, limiter, migrate
 from backend.game_routes import game_bp
+from backend.i18n import get_request_language, translate
 from backend.models import TokenBlocklist
 from backend.routes import auth_bp
 from backend.tactics import tactics_bp
@@ -100,8 +101,17 @@ def create_app(config_class: type[Config] = Config) -> Flask:
             return jsonify({"error": "Debes adjuntar una imagen."}), 400
 
         file_storage = request.files["image"]
+        allowed_mimetypes = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
+        if file_storage.mimetype and file_storage.mimetype not in allowed_mimetypes:
+            return jsonify({"error": "Formato de imagen no soportado."}), 400
+
+        max_size = int(app.config.get("MAX_DICE_UPLOAD_SIZE", 5 * 1024 * 1024))
+        file_bytes = file_storage.read(max_size + 1)
+        if len(file_bytes) > max_size:
+            return jsonify({"error": "La imagen excede el tamaño máximo permitido."}), 413
+
         try:
-            result = analyse_dice_image(file_storage.read())
+            result = analyse_dice_image(file_bytes)
         except DiceProcessingError as exc:
             return jsonify({"error": exc.message}), 400
 
