@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "languageName": "English",
+    "speechRecognitionLocale": "en-US"
+  },
+  "languageSelector": {
+    "label": "Language"
+  },
+  "app": {
+    "title": "Flames of War - AI Opponent",
+    "placeholder": "Type your message...",
+    "labels": {
+      "message": "message"
+    },
+    "buttons": {
+      "send": "Send",
+      "sending": "Sending..."
+    },
+    "status": {
+      "sending": "Sending message...",
+      "noResponse": "No response yet."
+    },
+    "response": "Response: {response}",
+    "errors": {
+      "emptyMessage": "Please enter a message before sending.",
+      "sendFailed": "Message could not be sent. Please try again."
+    }
+  },
+  "voice": {
+    "title": "Voice interaction",
+    "instructions": "Press \"Start voice\" and speak to send a message automatically.",
+    "buttons": {
+      "start": "Start voice",
+      "stop": "Stop"
+    },
+    "errors": {
+      "generic": "There was a problem with speech recognition.",
+      "notAllowed": "Microphone permissions were not granted.",
+      "noSpeech": "No audio detected. Please try again.",
+      "startFailure": "Unable to start speech recognition."
+    },
+    "unsupported": "Voice interaction is not supported in this browser."
+  }
+}

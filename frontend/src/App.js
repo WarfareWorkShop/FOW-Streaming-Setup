@@ -528,7 +528,7 @@ function App() {
       {isLoading && <p role="status">Enviando mensaje...</p>}
       {error && (
         <p role="alert" style={{ color: 'red' }}>
-          {error}
+          {errorMessage}
         </p>
       )}
       <article>

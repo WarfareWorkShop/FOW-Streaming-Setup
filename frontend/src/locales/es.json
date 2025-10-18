@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "languageName": "Español",
+    "speechRecognitionLocale": "es-ES"
+  },
+  "languageSelector": {
+    "label": "Idioma"
+  },
+  "app": {
+    "title": "Flames of War - Oponente IA",
+    "placeholder": "Escribe tu mensaje...",
+    "labels": {
+      "message": "mensaje"
+    },
+    "buttons": {
+      "send": "Enviar",
+      "sending": "Enviando..."
+    },
+    "status": {
+      "sending": "Enviando mensaje...",
+      "noResponse": "Aún no hay respuesta."
+    },
+    "response": "Respuesta: {response}",
+    "errors": {
+      "emptyMessage": "Por favor ingresa un mensaje antes de enviar.",
+      "sendFailed": "No se pudo enviar el mensaje. Inténtalo nuevamente."
+    }
+  },
+  "voice": {
+    "title": "Interacción por voz",
+    "instructions": "Presiona \"Iniciar voz\" y habla para enviar un mensaje automáticamente.",
+    "buttons": {
+      "start": "Iniciar voz",
+      "stop": "Detener"
+    },
+    "errors": {
+      "generic": "Ocurrió un problema con el reconocimiento de voz.",
+      "notAllowed": "No se concedieron permisos para usar el micrófono.",
+      "noSpeech": "No se detectó audio. Intenta nuevamente.",
+      "startFailure": "No se pudo iniciar el reconocimiento de voz."
+    },
+    "unsupported": "La interacción por voz no es compatible con este navegador."
+  }
+}

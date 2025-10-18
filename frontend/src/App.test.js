@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import App from './App';
+import { DEFAULT_LANGUAGE, translate } from './i18n';
 
 jest.mock('./auth', () => ({
   clearTokens: jest.fn(),

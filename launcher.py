@@ -11,14 +11,21 @@ import os
 import shutil
 import subprocess
 import sys
+from functools import partial
 from pathlib import Path
 from typing import Sequence
+
+from i18n import determine_language_from_cli, format_language_list, translate
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 CONFIGURATOR_PATH = PROJECT_ROOT / "configurator.py"
+
+LANGUAGE, REMAINING_ARGS = determine_language_from_cli()
+sys.argv = [sys.argv[0], *REMAINING_ARGS]
+t = partial(translate, language=LANGUAGE)
 
 
 def clear_screen() -> None:
@@ -33,7 +40,7 @@ def ensure_directory(path: Path, description: str) -> bool:
     """Verifica que exista el directorio requerido por una acción."""
 
     if not path.exists():
-        print(f"\n⚠️  No se encontró {description}: {path}")
+        print(t("launcher.missing_directory", description=description, path=path))
         return False
     return True
 
@@ -42,19 +49,21 @@ def run_command(command: Sequence[str], cwd: Path | None = None) -> bool:
     """Ejecuta un comando mostrando su salida en tiempo real."""
 
     command_display = " ".join(command)
-    location = f" (en {cwd})" if cwd else ""
-    print(f"\n➡️  Ejecutando: {command_display}{location}\n")
+    location = (
+        f" ({t('launcher.run_command.location', path=cwd)})" if cwd else ""
+    )
+    print(t("launcher.run_command.executing", command=command_display, location=location))
 
     try:
         subprocess.run(command, cwd=cwd, check=True)
     except subprocess.CalledProcessError as exc:
-        print(f"\n❌ El comando terminó con errores (código {exc.returncode}).")
+        print(t("launcher.run_command.error_code", code=exc.returncode))
         return False
     except FileNotFoundError:
-        print("\n❌ Comando no encontrado. ¿Está instalado?")
+        print(t("launcher.run_command.not_found"))
         return False
     except KeyboardInterrupt:
-        print("\n⏹️  Ejecución interrumpida por el usuario.")
+        print(t("launcher.run_command.interrupted"))
         return False
 
     return True
@@ -67,39 +76,36 @@ def pip_command(*args: str) -> Sequence[str]:
 
 
 def install_backend_dependencies() -> None:
-    if not ensure_directory(BACKEND_DIR, "el directorio del backend"):
+    if not ensure_directory(BACKEND_DIR, t("launcher.descriptions.backend_directory")):
         return
 
     requirements = BACKEND_DIR / "requirements.txt"
     if not requirements.exists():
-        print("\n⚠️  No se encontró el archivo requirements.txt del backend.")
+        print(t("launcher.backend_requirements_missing"))
         return
 
-    print("\nInstalando dependencias del backend (Python)...")
+    print(t("launcher.install_backend_start"))
     run_command(pip_command("install", "-r", "requirements.txt"), cwd=BACKEND_DIR)
 
 
 def install_frontend_dependencies() -> None:
-    if not ensure_directory(FRONTEND_DIR, "el directorio del frontend"):
+    if not ensure_directory(FRONTEND_DIR, t("launcher.descriptions.frontend_directory")):
         return
 
     npm = shutil.which("npm")
     if not npm:
-        print("\n❌ No se encontró el comando npm. Instala Node.js para continuar.")
+        print(t("launcher.frontend_npm_missing"))
         return
 
-    print("\nInstalando dependencias del frontend (Node.js)...")
+    print(t("launcher.install_frontend_start"))
     run_command((npm, "install"), cwd=FRONTEND_DIR)
 
 
 def run_backend_server() -> None:
-    if not ensure_directory(BACKEND_DIR, "el directorio del backend"):
+    if not ensure_directory(BACKEND_DIR, t("launcher.descriptions.backend_directory")):
         return
 
-    print(
-        "\nIniciando el servidor Flask del backend."
-        "\nPulsa Ctrl+C para detenerlo y volver al menú."
-    )
+    print(t("launcher.run_backend_start"))
 
     command = (
         sys.executable,
@@ -115,38 +121,38 @@ def run_backend_server() -> None:
 
 
 def run_frontend_server() -> None:
-    if not ensure_directory(FRONTEND_DIR, "el directorio del frontend"):
+    if not ensure_directory(FRONTEND_DIR, t("launcher.descriptions.frontend_directory")):
         return
 
     npm = shutil.which("npm")
     if not npm:
-        print("\n❌ No se encontró el comando npm. Instala Node.js para continuar.")
+        print(t("launcher.frontend_npm_missing"))
         return
 
-    print(
-        "\nIniciando el servidor de desarrollo del frontend."
-        "\nPulsa Ctrl+C para detenerlo y volver al menú."
-    )
+    print(t("launcher.run_frontend_start"))
 
     run_command((npm, "start"), cwd=FRONTEND_DIR)
 
 
 def run_configurator() -> None:
     if not CONFIGURATOR_PATH.exists():
-        print("\n❌ No se encontró configurator.py en el directorio del proyecto.")
+        print(t("launcher.configurator_missing"))
         return
 
-    print(
-        "\nAbriendo el asistente interactivo para crear/actualizar el archivo .env."
-        "\nPulsa Ctrl+C para cancelar y volver al menú."
-    )
+    print(t("launcher.configurator_start"))
 
     run_command((sys.executable, str(CONFIGURATOR_PATH)), cwd=PROJECT_ROOT)
 
 
 def show_environment_summary() -> None:
-    print("\nResumen rápido del entorno:")
-    print(f"- Python: {sys.version.split()[0]} ({sys.executable})")
+    print(t("launcher.environment_summary_title"))
+    print(
+        t(
+            "launcher.environment_summary.python",
+            version=sys.version.split()[0],
+            executable=sys.executable,
+        )
+    )
 
     try:
         pip_version = subprocess.check_output(
@@ -155,9 +161,9 @@ def show_environment_summary() -> None:
             text=True,
         ).strip()
     except subprocess.CalledProcessError:
-        pip_version = "No se pudo obtener la versión de pip."
-
-    print(f"- Pip: {pip_version}")
+        print(t("launcher.environment_summary.pip_error"))
+    else:
+        print(t("launcher.environment_summary.pip", version=pip_version))
 
     npm = shutil.which("npm")
     if npm:
@@ -167,47 +173,41 @@ def show_environment_summary() -> None:
                 text=True,
             ).strip()
         except subprocess.CalledProcessError:
-            npm_version = "No se pudo obtener la versión."
-        print(f"- npm: {npm_version} ({npm})")
+            print(t("launcher.environment_summary.npm_error"))
+        else:
+            print(
+                t(
+                    "launcher.environment_summary.npm_version",
+                    version=npm_version,
+                    path=npm,
+                )
+            )
     else:
-        print("- npm: no encontrado (instala Node.js si necesitas el frontend)")
+        print(t("launcher.environment_summary.npm_missing"))
 
-    print(f"- Directorio del proyecto: {PROJECT_ROOT}")
+    print(t("launcher.environment_summary.project_dir", path=PROJECT_ROOT))
 
 
 def print_menu() -> None:
-    print(
-        """
-============================================
- Launcher de Flames of War Streaming Setup
-============================================
-
-Elige una opción:
-  1) Instalar dependencias del backend (Python)
-  2) Lanzar servidor del backend
-  3) Instalar dependencias del frontend (Node.js)
-  4) Lanzar servidor del frontend
-  5) Mostrar resumen del entorno
-  6) Asistente para configurar variables (.env)
-  0) Salir
-""".strip()
-    )
+    for line in t("launcher.menu.lines"):
+        print(line)
 
 
 def main() -> None:
     clear_screen()
-    print("Bienvenido/a al lanzador interactivo del proyecto.\n")
+    print(t("launcher.menu.welcome"))
+    print(t("launcher.language_hint", languages=format_language_list(LANGUAGE)))
     show_environment_summary()
 
     while True:
         print_menu()
         try:
-            choice = input("\nSelecciona una opción y pulsa Enter: ").strip()
+            choice = input(t("launcher.menu.prompt")).strip()
         except EOFError:
-            print("\nEntrada finalizada. ¡Hasta pronto!")
+            print(t("launcher.farewell_eof"))
             break
         except KeyboardInterrupt:
-            print("\n\nInterrupción detectada. ¡Hasta pronto!")
+            print(t("launcher.farewell_interrupt"))
             break
 
         if choice == "1":
@@ -223,10 +223,10 @@ def main() -> None:
         elif choice == "6":
             run_configurator()
         elif choice == "0":
-            print("\n¡Gracias por usar el lanzador! Hasta pronto.")
+            print(t("launcher.menu.goodbye"))
             break
         else:
-            print("\nOpción no reconocida. Introduce un número del 0 al 5.")
+            print(t("launcher.menu.invalid"))
 
 
 if __name__ == "__main__":  # pragma: no cover - punto de entrada de script

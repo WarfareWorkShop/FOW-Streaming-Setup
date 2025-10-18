@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import partial
+
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask_jwt_extended import jwt_required, verify_jwt_in_request
@@ -45,7 +47,9 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     @app.route("/")
     def index() -> str:
-        return render_template("index.html")
+        language = get_request_language()
+        translator = partial(translate, language=language)
+        return render_template("index.html", language=language, t=translator)
 
     @app.route("/api/chat", methods=["POST"])
     @limiter.limit(lambda: app.config.get("CHAT_RATE_LIMIT", "30/minute"))
@@ -57,8 +61,10 @@ def create_app(config_class: type[Config] = Config) -> Flask:
         user_message = (data.get("message") or "").strip()
         provider = data.get("provider") or app.config["DEFAULT_AI_PROVIDER"]
 
+        language = get_request_language()
+
         if not user_message:
-            return jsonify({"error": "Message is required"}), 400
+            return jsonify({"error": translate("backend.chat.errors.message_required", language)}), 400
 
         max_length = int(app.config.get("MAX_CHAT_MESSAGE_LENGTH", 2000))
         if len(user_message) > max_length:
@@ -75,7 +81,12 @@ def create_app(config_class: type[Config] = Config) -> Flask:
         try:
             ai_response = generate_ai_response(user_message, provider, app.config)
         except MissingConfigurationError as exc:
-            return jsonify({"error": str(exc)}), 400
+            error = translate(
+                "backend.chat.errors.missing_configuration",
+                language,
+                details=str(exc),
+            )
+            return jsonify({"error": error}), 400
         except AIProviderError as exc:  # pragma: no cover - network failure path
             app.logger.warning("AI provider error", extra={"provider_error": str(exc)})
             return jsonify({"error": str(exc)}), getattr(exc, "status_code", 502)

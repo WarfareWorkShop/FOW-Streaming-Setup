@@ -1,0 +1,144 @@
+{
+  "common": {
+    "languages": {
+      "en": "Inglés",
+      "es": "Español"
+    }
+  },
+  "configurator": {
+    "banner": "\n============================================\n Asistente de configuración de entorno (.env)\n============================================\n",
+    "language_hint": "Usa --lang para cambiar el idioma (disponible: {languages}).",
+    "non_tty": "Este asistente requiere una terminal interactiva.",
+    "existing_file": "Se ha detectado un archivo existente: {path}",
+    "existing_file_warning": "Se leerán los valores actuales y se creará una copia de seguridad antes de sobrescribir.",
+    "backup_created": "📁 Copia de seguridad creada en {path}",
+    "completed": "\n✅ Archivo de configuración actualizado en {path}\n",
+    "field_required": "Este campo es obligatorio. Introduce un valor.",
+    "field_generated": "🔐 Generado automáticamente {key}.",
+    "input_abort_eof": "\nEntrada finalizada inesperadamente. Abortando.",
+    "input_abort_interrupt": "\nInterrupción detectada. Abortando.",
+    "fields": {
+      "secret_key": {
+        "prompt": "Clave secreta para Flask",
+        "note": "Se utiliza para firmar cookies y tokens. Si dejas el campo en blanco se generará un valor aleatorio seguro."
+      },
+      "database_uri": {
+        "prompt": "Cadena de conexión a la base de datos",
+        "note": "Acepta cualquier URI compatible con SQLAlchemy."
+      },
+      "default_ai_provider": {
+        "prompt": "Proveedor de IA predeterminado (openai/anthropic/lmstudio)"
+      },
+      "openai_api_key": {
+        "prompt": "Clave de API de OpenAI",
+        "note": "Déjalo vacío si no vas a usar OpenAI por ahora."
+      },
+      "openai_model": {
+        "prompt": "Modelo de OpenAI"
+      },
+      "anthropic_api_key": {
+        "prompt": "Clave de API de Anthropic",
+        "note": "Déjalo vacío si no vas a usar Anthropic."
+      },
+      "anthropic_model": {
+        "prompt": "Modelo de Anthropic"
+      },
+      "lm_studio_base_url": {
+        "prompt": "URL base para LM Studio"
+      },
+      "lm_studio_model": {
+        "prompt": "Modelo de LM Studio"
+      },
+      "ai_request_timeout": {
+        "prompt": "Tiempo de espera (segundos) para peticiones de IA"
+      }
+    },
+    "file_header": "# Archivo generado por configurator.py\n# Modifica los valores manualmente si lo necesitas."
+  },
+  "launcher": {
+    "language_hint": "Usa --lang para cambiar el idioma (disponible: {languages}).",
+    "clear_screen_error": "",
+    "missing_directory": "\n⚠️  No se encontró {description}: {path}",
+    "descriptions": {
+      "backend_directory": "el directorio del backend",
+      "frontend_directory": "el directorio del frontend"
+    },
+    "run_command": {
+      "executing": "\n➡️  Ejecutando: {command}{location}\n",
+      "error_code": "\n❌ El comando terminó con errores (código {code}).",
+      "not_found": "\n❌ Comando no encontrado. ¿Está instalado?",
+      "interrupted": "\n⏹️  Ejecución interrumpida por el usuario.",
+      "location": "en {path}"
+    },
+    "install_backend_start": "\nInstalando dependencias del backend (Python)...",
+    "backend_requirements_missing": "\n⚠️  No se encontró el archivo requirements.txt del backend.",
+    "install_frontend_start": "\nInstalando dependencias del frontend (Node.js)...",
+    "frontend_npm_missing": "\n❌ No se encontró el comando npm. Instala Node.js para continuar.",
+    "run_backend_start": "\nIniciando el servidor Flask del backend.\nPulsa Ctrl+C para detenerlo y volver al menú.",
+    "run_frontend_start": "\nIniciando el servidor de desarrollo del frontend.\nPulsa Ctrl+C para detenerlo y volver al menú.",
+    "configurator_start": "\nAbriendo el asistente interactivo para crear/actualizar el archivo .env.\nPulsa Ctrl+C para cancelar y volver al menú.",
+    "configurator_missing": "\n❌ No se encontró configurator.py en el directorio del proyecto.",
+    "environment_summary_title": "\nResumen rápido del entorno:",
+    "environment_summary": {
+      "python": "- Python: {version} ({executable})",
+      "pip": "- Pip: {version}",
+      "pip_error": "- Pip: No se pudo obtener la versión de pip.",
+      "npm_version": "- npm: {version} ({path})",
+      "npm_error": "- npm: No se pudo obtener la versión.",
+      "npm_missing": "- npm: no encontrado (instala Node.js si necesitas el frontend)",
+      "project_dir": "- Directorio del proyecto: {path}"
+    },
+    "menu": {
+      "lines": [
+        "============================================",
+        " Launcher de Flames of War Streaming Setup",
+        "============================================",
+        "",
+        "Elige una opción:",
+        "  1) Instalar dependencias del backend (Python)",
+        "  2) Lanzar servidor del backend",
+        "  3) Instalar dependencias del frontend (Node.js)",
+        "  4) Lanzar servidor del frontend",
+        "  5) Mostrar resumen del entorno",
+        "  6) Asistente para configurar variables (.env)",
+        "  0) Salir"
+      ],
+      "prompt": "\nSelecciona una opción y pulsa Enter: ",
+      "invalid": "\nOpción no reconocida. Introduce un número del 0 al 6.",
+      "goodbye": "\n¡Gracias por usar el lanzador! Hasta pronto.",
+      "welcome": "Bienvenido/a al lanzador interactivo del proyecto.\n"
+    },
+    "farewell_eof": "\nEntrada finalizada. ¡Hasta pronto!",
+    "farewell_interrupt": "\n\nInterrupción detectada. ¡Hasta pronto!"
+  },
+  "backend": {
+    "index": {
+      "title": "FOW Streaming Setup",
+      "heading": "Bienvenido a FOW Streaming Setup",
+      "description": "Esta es una página de inicio básica para la aplicación Flask."
+    },
+    "chat": {
+      "errors": {
+        "message_required": "El mensaje es obligatorio.",
+        "missing_configuration": "Falta configuración necesaria: {details}",
+        "provider_error": "El proveedor de IA devolvió un error: {details}",
+        "unknown": "No se pudo procesar la solicitud."
+      }
+    },
+    "auth": {
+      "errors": {
+        "missing_fields": "Nombre de usuario, correo electrónico y contraseña son obligatorios.",
+        "username_taken": "El nombre de usuario ya está en uso.",
+        "email_taken": "El correo electrónico ya está registrado.",
+        "password_required": "Nombre de usuario y contraseña son obligatorios.",
+        "invalid_credentials": "Credenciales no válidas.",
+        "user_not_found": "Usuario no encontrado.",
+        "registration_conflict": "Conflicto al registrar el usuario.",
+        "registration_failed": "No se pudo registrar el usuario. Inténtalo de nuevo más tarde."
+      },
+      "success": {
+        "registered": "¡Usuario registrado correctamente!"
+      }
+    }
+  }
+}
