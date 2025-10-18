@@ -12,7 +12,7 @@ This repository collects the different experiments and prototypes required to bu
 - **frontend/imageprocessing.py**: Standalone script with OpenCV utilities for analyzing static images.
 - **launcher.py**: Interactive launcher to install dependencies and start the servers.
 - **configurator.py**: Assistant to create or update the project `.env` file.
-- **tools/lanzadados/***: Documentation and hardware prototypes for dice reading (not connected to the software).
+- **tools/rolldice/***: Documentation and hardware prototypes for dice reading (not connected to the software).
 
 ## Current state of the features
 
