@@ -18,6 +18,7 @@ from typing import Sequence
 PROJECT_ROOT = Path(__file__).resolve().parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
+CONFIGURATOR_PATH = PROJECT_ROOT / "configurator.py"
 
 
 def clear_screen() -> None:
@@ -130,6 +131,19 @@ def run_frontend_server() -> None:
     run_command((npm, "start"), cwd=FRONTEND_DIR)
 
 
+def run_configurator() -> None:
+    if not CONFIGURATOR_PATH.exists():
+        print("\n❌ No se encontró configurator.py en el directorio del proyecto.")
+        return
+
+    print(
+        "\nAbriendo el asistente interactivo para crear/actualizar el archivo .env."
+        "\nPulsa Ctrl+C para cancelar y volver al menú."
+    )
+
+    run_command((sys.executable, str(CONFIGURATOR_PATH)), cwd=PROJECT_ROOT)
+
+
 def show_environment_summary() -> None:
     print("\nResumen rápido del entorno:")
     print(f"- Python: {sys.version.split()[0]} ({sys.executable})")
@@ -174,6 +188,7 @@ Elige una opción:
   3) Instalar dependencias del frontend (Node.js)
   4) Lanzar servidor del frontend
   5) Mostrar resumen del entorno
+  6) Asistente para configurar variables (.env)
   0) Salir
 """.strip()
     )
@@ -205,6 +220,8 @@ def main() -> None:
             run_frontend_server()
         elif choice == "5":
             show_environment_summary()
+        elif choice == "6":
+            run_configurator()
         elif choice == "0":
             print("\n¡Gracias por usar el lanzador! Hasta pronto.")
             break

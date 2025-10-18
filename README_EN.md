@@ -12,6 +12,8 @@ described in earlier drafts of the project.
 - **frontend/src/App.js**: Minimal React interface that sends text messages to the backend and renders the simulated reply.
 - **frontend/src/VoiceInteraction.js**: Browser speech-recognition demo (not wired into the main app yet).
 - **frontend/imageprocessing.py**: Standalone OpenCV script used to experiment with contour detection on static images.
+- **launcher.py**: Interactive launcher to install dependencies and start the servers.
+- **configurator.py**: Helper that creates or updates the project's `.env` file.
 - **tools/lanzadados/***: Hardware notes and prototypes for dice reading (not connected to the software stack).
 
 ## Current functionality
@@ -51,6 +53,10 @@ flask --app app run
 ```
 
 > **TODO**: set environment variables for `SECRET_KEY`, `DATABASE_URI` and the OpenAI key once the real integration is in place.
+
+### Interactive helpers
+
+Run `python launcher.py` from the repository root for a guided experience. The menu lets you install backend/frontend dependencies, start the servers and open the configuration assistant. The latter triggers `configurator.py`, which walks you through generating a `.env` file with all the required variables (secret keys, AI providers, etc.). When a previous `.env` is found the tool automatically creates a backup before overwriting it.
 
 ### Frontend
 

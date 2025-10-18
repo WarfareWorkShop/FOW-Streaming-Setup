@@ -13,6 +13,8 @@ futuras.
 - **frontend/src/App.js**: Interfaz React mínima para enviar mensajes de texto al backend.
 - **frontend/src/VoiceInteraction.js**: Ejemplo de transcripción de voz en el navegador (no integrado con el backend).
 - **frontend/imageprocessing.py**: Script independiente con utilidades de OpenCV para analizar imágenes estáticas.
+- **launcher.py**: Lanzador interactivo para instalar dependencias y arrancar los servidores.
+- **configurator.py**: Asistente para crear o actualizar el archivo `.env` del proyecto.
 - **tools/lanzadados/***: Documentación y prototipos de hardware para lectura de dados (no conectados al software).
 
 ## Estado actual de las funcionalidades
@@ -157,6 +159,10 @@ scripts/bootstrap.sh
 ```
 
 El script `bootstrap.sh` aplica las migraciones y ejecuta `scripts/seed_users.py`, que crea usuarios de prueba (`test_user` y `streamer`) siempre que no existan. Si necesitas crear un usuario adicional durante el sembrado, define las variables `FIXTURE_CREATE_USER`, `FIXTURE_CREATE_EMAIL` y opcionalmente `FIXTURE_CREATE_PASSWORD` antes de ejecutar el script.
+
+### Asistentes interactivos
+
+Si prefieres no memorizar comandos, ejecuta `python launcher.py` desde la raíz del repositorio. El menú permite instalar dependencias del backend/frontend, iniciar los servidores y abrir el asistente de configuración. Este último invoca `configurator.py`, que te guía paso a paso para generar el archivo `.env` con las variables necesarias (`SECRET_KEY`, proveedores de IA, etc.). Se crea automáticamente una copia de seguridad cuando ya existía un `.env` anterior.
 
 ## Configurar el Frontend
 - `OPENAI_API_KEY`: clave de API (obligatoria para usar este proveedor).
